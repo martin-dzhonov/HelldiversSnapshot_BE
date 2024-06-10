@@ -2,13 +2,15 @@
 const express = require('express'); 
 const app = express();
 const mongoose = require('mongoose');
+const cors = require('cors');
+const bodyParser = require('body-parser')
 
 const mongoPass = encodeURIComponent('Crtstr#21')
 
 mongoose.connect(`mongodb+srv://martindzhonov:${mongoPass}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
 
 app.use(express.json());
-const port = 3002;
+const port = 8080;
 
 const gameSchema = new mongoose.Schema({
     faction: String,
@@ -19,6 +21,8 @@ const gameSchema = new mongoose.Schema({
     players: [],
 })
 const GameModel = mongoose.model("game", gameSchema);
+
+app.use(bodyParser.json(), cors());
 
 app.get('/test', (req, res) => {
     res.send('Welcome to my server!');
