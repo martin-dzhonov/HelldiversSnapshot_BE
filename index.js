@@ -37,6 +37,13 @@ app.get('/test', (req, res) => {
     res.send('Welcome to my server!');
 });
 
+app.get('/faction/all', (req, res) => {
+    GameModel.find({ }).then(function (games) {
+        res.send(games);
+    });
+});
+
+
 app.get('/faction/:id', (req, res) => {
     const factionName = req.params['id'];
     GameModel.find({ faction: factionName }).then(function (games) {
