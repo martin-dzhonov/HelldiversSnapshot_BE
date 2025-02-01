@@ -15,12 +15,12 @@ const gameSchema = new mongoose.Schema({
     modifiers: [],
 })
 const GameModel = mongoose.model("matches", gameSchema);
-const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
+const { factions, patchPeriods } = require('./constants');
 
 const {
     parseTotals,
     filterByDateRange 
-} = require('./utils');
+} = require('./utils.mjs');
 
 app.use(express.json());
 const port = process.env.PORT || 8080;
@@ -104,6 +104,7 @@ app.get('/strategem/filter', async (req, res) => {
         acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
         return acc;
     }, {});
+    console.timeEnd('Execution Time');
 
     res.send(result);
 });

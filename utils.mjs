@@ -1,4 +1,6 @@
-import { factions, patchPeriods, missionModifiers, missionNames, strategems } from './constants.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { missionModifiers, missionNames, strategems } = require('./constants');
 
 
 const getDictObj = () => {
@@ -113,7 +115,6 @@ const parseTotals = (games) => {
         const sorted = Object.fromEntries(Object.entries(strategems)
             .filter(([key, value]) => value.loadouts > 0)
             .sort(([, a], [, b]) => b.loadouts - a.loadouts));
-            
         data.strategems = sorted;
 
         return data;
