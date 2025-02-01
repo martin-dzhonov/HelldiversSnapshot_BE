@@ -17,6 +17,11 @@ const gameSchema = new mongoose.Schema({
 const GameModel = mongoose.model("matches", gameSchema);
 const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
 
+const {
+    parseTotals,
+    filterByDateRange 
+} = require('./utils');
+
 app.use(express.json());
 const port = process.env.PORT || 8080;
 
@@ -84,119 +89,24 @@ app.get('/strategem', async (req, res) => {
     res.send(result);
 });
 
-const getMissionsByLength = (type) => {
-    return type === "All"
-        ? missionNames[0].concat(missionNames[1])
-        : type === "Long" ? missionNames[0] : missionNames[1];
-};
+app.get('/strategem/filter', async (req, res) => {
+    console.time('Execution Time');
 
-const getMissionLength = (missionName) => {
-    const longMissions = getMissionsByLength("Long");
-    return longMissions.includes(missionName) ? "long" : "short";
-};
+    const mongoData = await GameModel.find({});
 
-const getFactionsDict = () => {
-    const strategemNames = Object.keys(strategems);
+    const dataSegmented = factions.map((faction) =>
+        patchPeriods.map((patch) => mongoData.filter((game) =>
+            game.faction === faction &&
+            filterByDateRange(patch.start, patch.end, game.createdAt)))
+    );
 
-    return factions.reduce((acc, faction) => {
-        acc[faction] = {
-            totalGames: 0,
-            totalLoadouts: 0,
-            missions: { short: 0, long: 0 },
-            diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
-            strategems: strategemNames.reduce((acc, strategem) => {
-                acc[strategem] = {
-                    loadouts: 0,
-                    games: 0,
-                    companions: {},
-                    missions: { short: 0, long: 0 },
-                    diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
-                    modifiers: missionModifiers.reduce((acc, modifier) => {
-                        acc[modifier] = 0;
-                        return acc;
-                    }, {})
-                };
-                return acc;
-            }, {})
-        };
+    const result = factions.reduce((acc, key, index) => {
+        acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
         return acc;
     }, {});
-}
 
-const getItemsByCategory = (companions) => {
-    const sorted = Object.entries(companions).sort(([, a], [, b]) => b - a).map((item)=> { return {name: item[0], total: item[1]}})
-
-    return {
-        all: sorted.slice(0, 4),
-        eagle: sorted.filter((item)=> {
-            return strategems[item.name].category === "Eagle/Orbital";
-        }).slice(0, 4),
-        support: sorted.filter((item)=> {
-            return strategems[item.name].category === "Support";
-        }).slice(0, 4),
-        defensive: sorted.filter((item)=> {
-            return strategems[item.name].category === "Defensive"
-        }).slice(0, 4)
-    }
-};
-
-
-function getFactionData(patchData) {
-    const factionsDict = getFactionsDict();
-
-    patchData.forEach((game) => {
-        const uniqueItems = new Set(game.players.flat());
-        const factionData = factionsDict[game.faction];
-        factionData.totalGames++;
-    
-        game.players.forEach((loadout) => {
-            factionData.totalLoadouts++;
-            factionData.diffs[game.difficulty]++;
-            factionData.missions[getMissionLength(game.mission)]++;
-
-            loadout.forEach((item) => {
-                const strategem = factionData.strategems[item];
-                strategem.loadouts++;
-                strategem.diffs[game.difficulty]++;
-                strategem.missions[getMissionLength(game.mission)]++;
-
-                game.modifiers?.forEach((modifier) => {
-                    strategem.modifiers[modifier]++;
-                })
-
-                loadout.forEach((otherItem) => {
-                    if (otherItem !== item)
-                        if (strategem.companions[otherItem]) {
-                            strategem.companions[otherItem]++;
-                        } else {
-                            strategem.companions[otherItem] = 1;
-                        }
-                })
-            });
-        });
-        uniqueItems.forEach((item) => {
-            factionData.strategems[item].games++;
-        });
-    });
-
-    for (const key in factionsDict) {
-        const strategems = factionsDict[key].strategems;
-
-        for (const strategemKey in strategems) {
-            const companions = strategems[strategemKey].companions;
-            strategems[strategemKey].companions = getItemsByCategory(companions);
-
-            const modifiers = strategems[strategemKey].modifiers;
-            strategems[strategemKey].modifiers = Object.fromEntries(
-                Object.entries(modifiers).filter(([key, value]) => value !== 0)
-            );
-        }
-        const sorted = Object.fromEntries(Object.entries(strategems).sort(([, a], [, b]) => b.loadouts - a.loadouts));
-        factionsDict[key].strategems = sorted;
-    }
-    
-    return  factionsDict;
-}
+    res.send(result);
+});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
