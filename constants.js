@@ -110,9 +110,9 @@ const missionModifiers = [
 ];
 
 const patchPeriods = [
-    { id: "Omens of Tyranny", start: "12/12/2024", end: "Present" },
-    { id: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
-    { id: "Classic", start: "04/01/2024", end: "08/06/2024" },
+    { id: 0, name: "Omens of Tyranny", start: "12/12/2024", end: "Present" },
+    { id: 1, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+    { id: 2, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];

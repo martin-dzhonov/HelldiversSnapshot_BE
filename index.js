@@ -32,62 +32,31 @@ app.get('/', (req, res) => {
     res.send('Welcome to my server!');
 });
 
-app.get('/test', (req, res) => {
-    res.send('Welcome to my server!');
-});
+app.get('/games', async (req, res) => {
+    const { faction, patch } = req.query;
 
-app.get('/faction/:id', (req, res) => {
-    const factionName = req.params['id'];
-    const patch = patchPeriods[0];
-    const options = factionName === "all" ? {} : {
-        faction: factionName,
+    const patchRes = patchPeriods.find((item)=> item.id === Number(patch));
+
+     const mongoData = await GameModel.find({
+        faction: faction,
         createdAt: {
-            $gte: new Date(patch.start),
-            $lte: patch.end.toLowerCase() === 'present' ? new Date() : new Date(patch.end)
+            $gte: new Date(patchRes.start),
+            $lte: patchRes.end.toLowerCase() === 'present' ? new Date() : new Date(patchRes.end)
         }
-    }
-    GameModel.find(options).then(function (games) {
-        res.send(games);
-    });
-});
+    })
 
-app.get('/games/:faction/:id', (req, res) => {
-    const factionName = req.params['faction'];
-    const strategemName = req.params['id'];
-
-    GameModel.find({
-        faction: factionName,
-        'players': {
-            $elemMatch: { $elemMatch: { $in: [strategemName] } }
-        }
-    }).then(function (games) {
-        res.send(games);
-    });
-
+    res.send(mongoData);
 });
 
 app.get('/strategem', async (req, res) => {
-    console.time('Execution Time');
+    const { diff, mission } = req.query;
+    const validMissions = getMissionsByLength(mission);
+    const filter = {
+        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
+        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+    };
 
-    const patchesData = await Promise.all(patchPeriods.map(patch => GameModel.find({
-        createdAt: {
-            $gte: new Date(patch.start),
-            $lte: patch.end.toLowerCase() === 'present' ? new Date() : new Date(patch.end)
-        }
-    })))
-
-    const result = patchesData.map((patchData) => {
-        return getFactionData(patchData);
-    })
-    console.timeEnd('Execution Time');
-
-    res.send(result);
-});
-
-app.get('/strategem/filter', async (req, res) => {
-    console.time('Execution Time');
-
-    const mongoData = await GameModel.find({});
+    const mongoData = await GameModel.find(filter);
 
     const dataSegmented = factions.map((faction) =>
         patchPeriods.map((patch) => mongoData.filter((game) =>
@@ -99,7 +68,6 @@ app.get('/strategem/filter', async (req, res) => {
         acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
         return acc;
     }, {});
-    console.timeEnd('Execution Time');
 
     res.send(result);
 });
@@ -225,5 +193,39 @@ const parseTotals = (games) => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+//  app.get('/test', (req, res) => {
+    //     res.send('Welcome to my server!');
+    // });
+    
+    // app.get('/faction/:id', (req, res) => {
+    //     const factionName = req.params['id'];
+    //     const patch = patchPeriods[0];
+    //     const options = factionName === "all" ? {} : {
+    //         faction: factionName,
+    //         createdAt: {
+    //             $gte: new Date(patch.start),
+    //             $lte: patch.end.toLowerCase() === 'present' ? new Date() : new Date(patch.end)
+    //         }
+    //     }
+    //     GameModel.find(options).then(function (games) {
+    //         res.send(games);
+    //     });
+    // });
+    
+    // app.get('/games/:faction/:id', (req, res) => {
+    //     const factionName = req.params['faction'];
+    //     const strategemName = req.params['id'];
+    
+    //     GameModel.find({
+    //         faction: factionName,
+    //         'players': {
+    //             $elemMatch: { $elemMatch: { $in: [strategemName] } }
+    //         }
+    //     }).then(function (games) {
+    //         res.send(games);
+    //     });
+    
+    // });
 
 
