@@ -49,6 +49,9 @@ app.get('/games', async (req, res) => {
 });
 
 app.get('/strategem', async (req, res) => {
+    console.time('Execution Time');
+    console.log('---strategem----')
+
     const { diff, mission } = req.query;
     const validMissions = getMissionsByLength(mission);
     const filter = {
@@ -58,6 +61,7 @@ app.get('/strategem', async (req, res) => {
 
     const mongoData = await GameModel.find(filter);
 
+    console.log('--mongo data--')
     const dataSegmented = factions.map((faction) =>
         patchPeriods.map((patch) => mongoData.filter((game) =>
             game.faction === faction &&
@@ -68,7 +72,9 @@ app.get('/strategem', async (req, res) => {
         acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
         return acc;
     }, {});
+    console.log('-filter--')
 
+    console.timeEnd('Execution Time');
     res.send(result);
 });
 const getDictObj = () => {
