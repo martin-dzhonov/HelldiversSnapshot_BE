@@ -241,13 +241,21 @@ app.listen(port, () => {
 });
 
 app.get("/debug", async (req, res) => {
-    const redisClient = redis.createClient({
-        url : 'awsredisa-reraqc.serverless.use1.cache.amazonaws.com:6379'
+    const redisClient = redisredis.createClient({
+        socket: {
+          host: "awsredisa-reraqc.serverless.use1.cache.amazonaws.com",
+          port: 6379,
+          tls: {}
+        }
       });
+    //   .createClient({
+    //     url : "rediss://default:ASp2AAIjcDFjZTYxY2FkYTdjOTg0NWU3OTE4MmU3YThmNjdiYzg0OHAxMA@helped-cardinal-10870.upstash.io:6379"
+    //   });
       redisClient.on("error", function(err) {
         throw err;
       });
       await redisClient.connect()
+      res.send('Hi!');
 // redisClient.on('error', (err) => {
 //   console.error('Redis Client Error', err);
 // });
