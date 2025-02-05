@@ -243,7 +243,7 @@ app.listen(port, () => {
 app.get("/debug", (req, res) => {
     const redisClient = redis.createClient({
     socket: {
-      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
+      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:6379',
       port: 6379
     }
   });
