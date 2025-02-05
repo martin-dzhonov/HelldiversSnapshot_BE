@@ -1,19 +1,8 @@
 
 const express = require('express');
-const dotenv = require('dotenv')
-const { exec } = require("child_process");
-const mongoose = require('mongoose');
-const redis = require('redis');
-const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
-
-dotenv.config();
 const app = express();
-app.use(express.json());
-
-const port = process.env.PORT || 8080;
-
+const mongoose = require('mongoose');
 const mongoPass = encodeURIComponent('Crtstr#21')
-
 mongoose.connect(`mongodb+srv://martindzhonov:${mongoPass}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
 const gameSchema = new mongoose.Schema({
     id: Number,
@@ -26,8 +15,10 @@ const gameSchema = new mongoose.Schema({
     modifiers: [],
 })
 const GameModel = mongoose.model("matches", gameSchema);
+const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
 
- 
+app.use(express.json());
+const port = process.env.PORT || 8080;
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,66 +27,6 @@ app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
-
-const getDataFiltered = (mongoData) =>{
-    const dataSegmented = factions.map((faction) =>
-        patchPeriods.map((patch) => mongoData.filter((game) =>
-            game.faction === faction &&
-            filterByDateRange(patch.start, patch.end, game.createdAt)))
-    );
-
-    const result = factions.reduce((acc, key, index) => {
-        acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
-        return acc;
-    }, {});
-
-    return result;   
-}
-// app.get('/strategem', async (req, res) => {
-//     const startTime = Date.now();
-   
-//     const { diff, mission } = req.query;
-//     const validMissions = getMissionsByLength(mission);
-//     const filter = {
-//         ...((diff && diff !== "0") && { difficulty: Number(diff) }),
-//         ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-//     };
-
-//     const isEmptyFilter = Object.keys(filter).length === 0;
-//     const cacheKey = `strategem:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
-
-//     try {
-//         const cachedData = await redisClient.get(cacheKey);
-//         console.log(`Redit Get: ${Date.now() - startTime}`);
-
-//         if (cachedData) {
-//             console.log(`Cache hit: ${Date.now() - startTime}`);
-
-//             const filtered = getDataFiltered(JSON.parse(cachedData));
-//             console.log(`Filter: ${Date.now() - startTime}`);
-
-//             return res.send(filtered);
-//         } else {
-//             console.log(`Cache miss: ${Date.now() - startTime}`);
-
-//             const mongoData = await GameModel.find(filter);
-//             console.log(`Mongo: ${Date.now() - startTime}`);
-
-//             await redisClient.set(cacheKey, JSON.stringify(mongoData), {
-//                 EX: 3600,
-//             });
-//             console.log(`Redis Set: ${Date.now() - startTime}`);
-
-//             const filtered = getDataFiltered(mongoData);
-//             console.log(`Filter: ${Date.now() - startTime}`);
-
-//             return res.send(filtered);
-//         }
-//     } catch (err) {
-//         console.error(err);
-//         return res.status(500).send('Internal Server Error');
-//     }
-// });
 
 app.get('/', (req, res) => {
     res.send('Welcome to my server!');
@@ -117,6 +48,35 @@ app.get('/games', async (req, res) => {
     res.send(mongoData);
 });
 
+app.get('/strategem', async (req, res) => {
+    console.time('Execution Time');
+    console.log('---strategem----')
+
+    const { diff, mission } = req.query;
+    const validMissions = getMissionsByLength(mission);
+    const filter = {
+        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
+        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+    };
+
+    const mongoData = await GameModel.find(filter);
+
+    console.log('--mongo data--')
+    const dataSegmented = factions.map((faction) =>
+        patchPeriods.map((patch) => mongoData.filter((game) =>
+            game.faction === faction &&
+            filterByDateRange(patch.start, patch.end, game.createdAt)))
+    );
+
+    const result = factions.reduce((acc, key, index) => {
+        acc[key] = dataSegmented[index].map(patchData => parseTotals(patchData));
+        return acc;
+    }, {});
+    console.log('-filter--')
+
+    console.timeEnd('Execution Time');
+    res.send(result);
+});
 const getDictObj = () => {
     const strategemNames = Object.keys(strategems);
 
@@ -240,31 +200,9 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-app.get("/debug", (req, res) => {
-    const redisClient = redis.createClient({
-    socket: {
-      host: 'awsredisa-reraqc.serverless.use1.cache.amazonaws.com',
-      port: 6379
-    }
-  });
-
-// redisClient.on('error', (err) => {
-//   console.error('Redis Client Error', err);
-// });
-
-(async () => {
-  try {
-    await redisClient.connect(); 
-    console.log('Connected to Redis');
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-  }
-})();
-  });
-
- app.get('/test', (req, res) => {
-        res.send('Welcome to my server!');
-    });
+//  app.get('/test', (req, res) => {
+    //     res.send('Welcome to my server!');
+    // });
     
     // app.get('/faction/:id', (req, res) => {
     //     const factionName = req.params['id'];
@@ -295,5 +233,4 @@ app.get("/debug", (req, res) => {
     //     });
     
     // });
-
 
