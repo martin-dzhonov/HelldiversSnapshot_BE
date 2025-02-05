@@ -28,7 +28,7 @@ const GameModel = mongoose.model("matches", gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:6379',
+      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
       port: 6379
     }
   });
@@ -257,6 +257,16 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
+app.get("/debug", (req, res) => {
+    exec("nslookup awsredis-reraqc.serverless.use1.cache.amazonaws.com", (error, stdout, stderr) => {
+      if (error) {
+        res.send(`Error: ${error.message}\nStderr: ${stderr}`);
+      } else {
+        res.send(`Success: \n${stdout}`);
+      }
+    });
+  });
+  
 //  app.get('/test', (req, res) => {
     //     res.send('Welcome to my server!');
     // });
