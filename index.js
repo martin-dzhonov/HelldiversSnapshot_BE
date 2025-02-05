@@ -27,25 +27,7 @@ const gameSchema = new mongoose.Schema({
 })
 const GameModel = mongoose.model("matches", gameSchema);
 
-// const redisClient = redis.createClient({
-//     socket: {
-//       host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
-//       port: 6379
-//     }
-//   });
-
-// redisClient.on('error', (err) => {
-//   console.error('Redis Client Error', err);
-// });
-
-// (async () => {
-//   try {
-//     await redisClient.connect(); 
-//     console.log('Connected to Redis');
-//   } catch (err) {
-//     console.error('Failed to connect to Redis:', err);
-//   }
-// })();
+ 
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -259,13 +241,25 @@ app.listen(port, () => {
 });
 
 app.get("/debug", (req, res) => {
-    exec("nslookup awsredis-reraqc.serverless.use1.cache.amazonaws.com", (error, stdout, stderr) => {
-      if (error) {
-        res.send(`Error: ${error.message}\nStderr: ${stderr}`);
-      } else {
-        res.send(`Success: \n${stdout}`);
-      }
-    });
+    const redisClient = redis.createClient({
+    socket: {
+      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
+      port: 6379
+    }
+  });
+
+redisClient.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
+
+(async () => {
+  try {
+    await redisClient.connect(); 
+    console.log('Connected to Redis');
+  } catch (err) {
+    console.error('Failed to connect to Redis:', err);
+  }
+})();
   });
 
  app.get('/test', (req, res) => {
