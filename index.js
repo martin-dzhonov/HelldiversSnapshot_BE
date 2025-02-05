@@ -254,7 +254,8 @@ app.get("/debug", async (req, res) => {
       redisClient.on("error", function(err) {
         throw err;
       });
-      await redisClient.connect()
+      await redisClient.connect();
+      console.log('HIIIIIIII')
       res.send('Hi!');
 // redisClient.on('error', (err) => {
 //   console.error('Redis Client Error', err);
