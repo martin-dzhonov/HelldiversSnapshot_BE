@@ -248,9 +248,9 @@ app.get("/debug", (req, res) => {
     }
   });
 
-redisClient.on('error', (err) => {
-  console.error('Redis Client Error', err);
-});
+// redisClient.on('error', (err) => {
+//   console.error('Redis Client Error', err);
+// });
 
 (async () => {
   try {
