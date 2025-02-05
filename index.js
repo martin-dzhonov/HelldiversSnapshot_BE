@@ -1,12 +1,13 @@
 
 const express = require('express');
-const app = express();
 const dotenv = require('dotenv')
+const { exec } = require("child_process");
 const mongoose = require('mongoose');
 const redis = require('redis');
 const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
 
 dotenv.config();
+const app = express();
 app.use(express.json());
 
 const port = process.env.PORT || 8080;
@@ -26,16 +27,16 @@ const gameSchema = new mongoose.Schema({
 })
 const GameModel = mongoose.model("matches", gameSchema);
 
-const redisClient = redis.createClient({
-    socket: {
-      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
-      port: 6379
-    }
-  });
+// const redisClient = redis.createClient({
+//     socket: {
+//       host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:63791',
+//       port: 6379
+//     }
+//   });
 
-redisClient.on('error', (err) => {
-  console.error('Redis Client Error', err);
-});
+// redisClient.on('error', (err) => {
+//   console.error('Redis Client Error', err);
+// });
 
 // (async () => {
 //   try {
@@ -267,9 +268,9 @@ app.get("/debug", (req, res) => {
     });
   });
 
-//  app.get('/test', (req, res) => {
-    //     res.send('Welcome to my server!');
-    // });
+ app.get('/test', (req, res) => {
+        res.send('Welcome to my server!');
+    });
     
     // app.get('/faction/:id', (req, res) => {
     //     const factionName = req.params['id'];
