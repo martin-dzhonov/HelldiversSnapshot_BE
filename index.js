@@ -28,7 +28,7 @@ const GameModel = mongoose.model("matches", gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-      host: '127.0.0.1',
+      host: 'awsredis-reraqc.serverless.use1.cache.amazonaws.com:6379',
       port: 6379
     }
   });
