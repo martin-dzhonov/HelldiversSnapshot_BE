@@ -37,14 +37,14 @@ redisClient.on('error', (err) => {
   console.error('Redis Client Error', err);
 });
 
-(async () => {
-  try {
-    await redisClient.connect(); 
-    console.log('Connected to Redis');
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-  }
-})();
+// (async () => {
+//   try {
+//     await redisClient.connect(); 
+//     console.log('Connected to Redis');
+//   } catch (err) {
+//     console.error('Failed to connect to Redis:', err);
+//   }
+// })();
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -68,51 +68,51 @@ const getDataFiltered = (mongoData) =>{
 
     return result;   
 }
-app.get('/strategem', async (req, res) => {
-    const startTime = Date.now();
+// app.get('/strategem', async (req, res) => {
+//     const startTime = Date.now();
    
-    const { diff, mission } = req.query;
-    const validMissions = getMissionsByLength(mission);
-    const filter = {
-        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
-        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-    };
+//     const { diff, mission } = req.query;
+//     const validMissions = getMissionsByLength(mission);
+//     const filter = {
+//         ...((diff && diff !== "0") && { difficulty: Number(diff) }),
+//         ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+//     };
 
-    const isEmptyFilter = Object.keys(filter).length === 0;
-    const cacheKey = `strategem:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+//     const isEmptyFilter = Object.keys(filter).length === 0;
+//     const cacheKey = `strategem:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
 
-    try {
-        const cachedData = await redisClient.get(cacheKey);
-        console.log(`Redit Get: ${Date.now() - startTime}`);
+//     try {
+//         const cachedData = await redisClient.get(cacheKey);
+//         console.log(`Redit Get: ${Date.now() - startTime}`);
 
-        if (cachedData) {
-            console.log(`Cache hit: ${Date.now() - startTime}`);
+//         if (cachedData) {
+//             console.log(`Cache hit: ${Date.now() - startTime}`);
 
-            const filtered = getDataFiltered(JSON.parse(cachedData));
-            console.log(`Filter: ${Date.now() - startTime}`);
+//             const filtered = getDataFiltered(JSON.parse(cachedData));
+//             console.log(`Filter: ${Date.now() - startTime}`);
 
-            return res.send(filtered);
-        } else {
-            console.log(`Cache miss: ${Date.now() - startTime}`);
+//             return res.send(filtered);
+//         } else {
+//             console.log(`Cache miss: ${Date.now() - startTime}`);
 
-            const mongoData = await GameModel.find(filter);
-            console.log(`Mongo: ${Date.now() - startTime}`);
+//             const mongoData = await GameModel.find(filter);
+//             console.log(`Mongo: ${Date.now() - startTime}`);
 
-            await redisClient.set(cacheKey, JSON.stringify(mongoData), {
-                EX: 3600,
-            });
-            console.log(`Redis Set: ${Date.now() - startTime}`);
+//             await redisClient.set(cacheKey, JSON.stringify(mongoData), {
+//                 EX: 3600,
+//             });
+//             console.log(`Redis Set: ${Date.now() - startTime}`);
 
-            const filtered = getDataFiltered(mongoData);
-            console.log(`Filter: ${Date.now() - startTime}`);
+//             const filtered = getDataFiltered(mongoData);
+//             console.log(`Filter: ${Date.now() - startTime}`);
 
-            return res.send(filtered);
-        }
-    } catch (err) {
-        console.error(err);
-        return res.status(500).send('Internal Server Error');
-    }
-});
+//             return res.send(filtered);
+//         }
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).send('Internal Server Error');
+//     }
+// });
 
 app.get('/', (req, res) => {
     res.send('Welcome to my server!');
@@ -266,7 +266,7 @@ app.get("/debug", (req, res) => {
       }
     });
   });
-  
+
 //  app.get('/test', (req, res) => {
     //     res.send('Welcome to my server!');
     // });
