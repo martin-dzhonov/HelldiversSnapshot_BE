@@ -11,7 +11,7 @@ app.use(express.json());
 
 const port = process.env.PORT || 8080;
 
-const mongoPass = encodeURIComponent(process.env.MONGO_KEY)
+const mongoPass = encodeURIComponent('Crtstr#21')
 
 mongoose.connect(`mongodb+srv://martindzhonov:${mongoPass}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
 const gameSchema = new mongoose.Schema({
