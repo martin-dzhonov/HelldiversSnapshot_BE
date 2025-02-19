@@ -4,7 +4,7 @@ const dotenv = require('dotenv')
 const { exec } = require("child_process");
 const mongoose = require('mongoose');
 const redis = require('redis');
-const { factions, patchPeriods, missionModifiers, missionNames, strategems } = require('./constants');
+const { factions, patchPeriods, missionModifiers, missionNames, strategemsDict } = require('./constants');
 
 dotenv.config();
 const app = express();
@@ -23,14 +23,15 @@ const gameSchema = new mongoose.Schema({
     mission: String,
     createdAt: Date,
     players: [],
+    weapons: [],
     modifiers: [],
 })
-const GameModel = mongoose.model("matches", gameSchema);
+const model_name = "matches";
+const GameModel = mongoose.model(model_name, gameSchema);
 
- 
 const redisClient = redis.createClient({
     socket: {
-      host: "3.85.90.50",
+      host: "127.0.0.1",//3.85.90.50",
       port: 6379,
       tls: {}
     }
@@ -81,11 +82,11 @@ app.get('/strategem', async (req, res) => {
     };
 
     const isEmptyFilter = Object.keys(filter).length === 0;
-    const cacheKey = `strategem:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+    const cacheKey = `strategem_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
 
     try {
         const cachedData = await redisClient.get(cacheKey);
-        console.log(`Redit Get: ${Date.now() - startTime}`);
+        console.log(`Redis Get: ${Date.now() - startTime}`);
 
         if (cachedData) {
             console.log(`Cache hit: ${Date.now() - startTime}`);
@@ -137,7 +138,7 @@ app.get('/games', async (req, res) => {
 });
 
 const getDictObj = () => {
-    const strategemNames = Object.keys(strategems);
+    const strategemNames = Object.keys(strategemsDict);
 
     return {
         totalGames: 0,
@@ -157,7 +158,8 @@ const getDictObj = () => {
                 }, {})
             };
             return acc;
-        }, {})
+        }, {}),
+        weapons: {}
     };
 }
 
@@ -186,13 +188,13 @@ const getItemsByCategory = (companions) => {
     return {
         all: sorted.slice(0, 4),
         eagle: sorted.filter((item) => {
-            return strategems[item.name].category === "Eagle/Orbital";
+            return strategemsDict[item.name].category === "Eagle/Orbital";
         }).slice(0, 4),
         support: sorted.filter((item) => {
-            return strategems[item.name].category === "Support";
+            return strategemsDict[item.name].category === "Support";
         }).slice(0, 4),
         defensive: sorted.filter((item) => {
-            return strategems[item.name].category === "Defensive"
+            return strategemsDict[item.name].category === "Defensive"
         }).slice(0, 4)
     }
 };
@@ -229,8 +231,17 @@ const parseTotals = (games) => {
                     })
                 });
             });
-            uniqueItems.forEach((item) => {
-                data.strategems[item].games++;
+
+            game.weapons.forEach((loadout) => {
+                loadout.forEach((item) => {
+                    if(data.weapons[item]) {
+                        data.weapons[item].total++;
+                    } else {
+                        data.weapons[item] = {
+                            total: 1
+                        }
+                    }
+                });
             });
         });
 
@@ -245,10 +256,19 @@ const parseTotals = (games) => {
                 Object.entries(modifiers).filter(([key, value]) => value !== 0)
             );
         }
+
         const sorted = Object.fromEntries(Object.entries(strategems)
             .filter(([key, value]) => value.loadouts > 0)
             .sort(([, a], [, b]) => b.loadouts - a.loadouts));
         data.strategems = sorted;
+
+        const weapons = data.weapons;
+        
+        const weaponsSorted = Object.fromEntries(Object.entries(weapons)
+            .filter(([key, value]) => value.total > 0)
+            .sort(([, a], [, b]) => b.total - a.total));
+
+        data.weapons = weaponsSorted;
 
         return data;
     }
@@ -259,68 +279,8 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-app.get("/debug", async (req, res) => {
-    const redisClient = redis.createClient({
-        socket: {
-          host: "3.85.90.50",
-          port: 6379,
-          tls: {}
-        }
-      });
-
-      redisClient.on("error", function(err) {
-        throw err;
-      });
-      (async () => {
-        try {
-          await redisClient.connect(); 
-          console.log('Connected to Redis');
-        } catch (err) {
-          console.error('Failed to connect to Redis:', err);
-        }
-      })();
-      await redisClient.connect();
-      console.log('HIIIIIIII')
-      res.send('Hi!');
-// redisClient.on('error', (err) => {
-//   console.error('Redis Client Error', err);
-// });
-
-
-  });
-
  app.get('/test', (req, res) => {
-        res.send('Welcome to my server!');
-    });
+    res.send('Welcome to my server!');
+});
     
-    // app.get('/faction/:id', (req, res) => {
-    //     const factionName = req.params['id'];
-    //     const patch = patchPeriods[0];
-    //     const options = factionName === "all" ? {} : {
-    //         faction: factionName,
-    //         createdAt: {
-    //             $gte: new Date(patch.start),
-    //             $lte: patch.end.toLowerCase() === 'present' ? new Date() : new Date(patch.end)
-    //         }
-    //     }
-    //     GameModel.find(options).then(function (games) {
-    //         res.send(games);
-    //     });
-    // });
-    
-    // app.get('/games/:faction/:id', (req, res) => {
-    //     const factionName = req.params['faction'];
-    //     const strategemName = req.params['id'];
-    
-    //     GameModel.find({
-    //         faction: factionName,
-    //         'players': {
-    //             $elemMatch: { $elemMatch: { $in: [strategemName] } }
-    //         }
-    //     }).then(function (games) {
-    //         res.send(games);
-    //     });
-    
-    // });
-
 

@@ -4,12 +4,13 @@ const createStrategem = (baseName, fullName, category) => ({
     category,
 });
 
-const strategems = {
+const strategemsDict = {
     backpack_ballistic: createStrategem("Ballistic Shield Backpack", "SH-20 Ballistic Shield Backpack", "Support"),
     backpack_jump: createStrategem("Jump Pack", "LIFT-850 Jump Pack", "Support"),
     backpack_shield: createStrategem("Shield Generator Pack", "SH-20 Shield Generator Pack", "Support"),
     backpack_shield_directional: createStrategem("Directional Shield", "Directional Shield", "Support"),
     backpack_supply: createStrategem("Supply Pack", "B-1 Supply Pack", "Support"),
+    backpack_hellbomb: createStrategem("Portable Hellbomb", "B-100 Portable Hellbomb", "Support"),
     barrage_120: createStrategem("Orbital 120MM HE Barrage", "Orbital 120MM HE Barrage", "Eagle/Orbital"),
     barrage_380: createStrategem("Orbital 380MM HE Barrage", "Orbital 380MM HE Barrage", "Eagle/Orbital"),
     barrage_gatling: createStrategem("Orbital Gatling Barrage", "Orbital Gatling Barrage", "Eagle/Orbital"),
@@ -90,7 +91,7 @@ const missionNames = [
     ],
     [
         "ERADICATE TERMINID SWARM",
-        "ERADICATE AUTOMATON FORCES",   
+        "ERADICATE AUTOMATON FORCES",
         "BLITZ: SEARCH AND DESTROY",
         "BLITZ: DESTROY ILLUMINATE WARP SHIPS",
         "EVACUATE HIGH-VALUE ASSETS",
@@ -110,12 +111,13 @@ const missionModifiers = [
 ];
 
 const patchPeriods = [
-    { id: 0, name: "Omens of Tyranny", start: "12/12/2024", end: "Present" },
-    { id: 1, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
-    { id: 2, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
+    { id: 0, name: "Servants of Freedom", start: "02/08/2025", end: "Present" },
+    { id: 1, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
+    { id: 2, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+    { id: 3, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];
 const itemCategories = ["All", "Eagle/Orbital", "Support", "Defensive"];
 
-module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategems };
+module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict };

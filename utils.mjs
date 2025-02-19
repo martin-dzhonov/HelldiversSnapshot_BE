@@ -1,10 +1,10 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { missionModifiers, missionNames, strategems } = require('./constants');
+const { missionModifiers, missionNames, strategemsDict } = require('./constants');
 
 
 const getDictObj = () => {
-    const strategemNames = Object.keys(strategems);
+    const strategemNames = Object.keys(strategemsDict);
 
     return {
         totalGames: 0,
@@ -53,13 +53,13 @@ const getItemsByCategory = (companions) => {
     return {
         all: sorted.slice(0, 4),
         eagle: sorted.filter((item) => {
-            return strategems[item.name].category === "Eagle/Orbital";
+            return strategemsDict[item.name].category === "Eagle/Orbital";
         }).slice(0, 4),
         support: sorted.filter((item) => {
-            return strategems[item.name].category === "Support";
+            return strategemsDict[item.name].category === "Support";
         }).slice(0, 4),
         defensive: sorted.filter((item) => {
-            return strategems[item.name].category === "Defensive"
+            return strategemsDict[item.name].category === "Defensive"
         }).slice(0, 4)
     }
 };
