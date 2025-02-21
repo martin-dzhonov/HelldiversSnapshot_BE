@@ -4,7 +4,7 @@ const dotenv = require('dotenv')
 const { exec } = require("child_process");
 const mongoose = require('mongoose');
 const redis = require('redis');
-const { factions, patchPeriods, missionModifiers, missionNames, strategemsDict } = require('./constants');
+const { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict } = require('./constants');
 
 dotenv.config();
 const app = express();
@@ -31,23 +31,23 @@ const GameModel = mongoose.model(model_name, gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-      host: "3.85.90.50",//127.0.0.1,
-      port: 6379,
-      tls: {}
+        host: "3.85.90.50",//127.0.0.1,
+        port: 6379,
+        tls: {}
     }
-  });
+});
 
-  redisClient.on("error", function(err) {
+redisClient.on("error", function (err) {
     throw err;
-  });
-  (async () => {
+});
+(async () => {
     try {
-      await redisClient.connect(); 
-      console.log('Connected to Redis');
+        await redisClient.connect();
+        console.log('Connected to Redis');
     } catch (err) {
-      console.error('Failed to connect to Redis:', err);
+        console.error('Failed to connect to Redis:', err);
     }
-  })();
+})();
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,7 +57,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-const getDataFiltered = (mongoData) =>{
+const getDataFiltered = (mongoData) => {
     const dataSegmented = factions.map((faction) =>
         patchPeriods.map((patch) => mongoData.filter((game) =>
             game.faction === faction &&
@@ -69,11 +69,11 @@ const getDataFiltered = (mongoData) =>{
         return acc;
     }, {});
 
-    return result;   
+    return result;
 }
 app.get('/strategem', async (req, res) => {
     const startTime = Date.now();
-   
+
     const { diff, mission } = req.query;
     const validMissions = getMissionsByLength(mission);
     const filter = {
@@ -124,9 +124,9 @@ app.get('/', (req, res) => {
 app.get('/games', async (req, res) => {
     const { faction, patch } = req.query;
 
-    const patchRes = patchPeriods.find((item)=> item.id === Number(patch));
+    const patchRes = patchPeriods.find((item) => item.id === Number(patch));
 
-     const mongoData = await GameModel.find({
+    const mongoData = await GameModel.find({
         faction: faction,
         createdAt: {
             $gte: new Date(patchRes.start),
@@ -139,6 +139,7 @@ app.get('/games', async (req, res) => {
 
 const getDictObj = () => {
     const strategemNames = Object.keys(strategemsDict);
+    const weaponNames = Object.keys(weaponsDict);
 
     return {
         totalGames: 0,
@@ -159,7 +160,20 @@ const getDictObj = () => {
             };
             return acc;
         }, {}),
-        weapons: {}
+        weapons: weaponNames.reduce((acc, weapon) => {
+            acc[weapon] = {
+                loadouts: 0,
+                games: 0,
+                companions: {},
+                missions: { short: 0, long: 0 },
+                diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
+                modifiers: missionModifiers.reduce((acc, modifier) => {
+                    acc[modifier] = 0;
+                    return acc;
+                }, {})
+            };
+            return acc;
+        }, {}),
     };
 }
 
@@ -205,6 +219,15 @@ const parseTotals = (games) => {
     if (games.length > 0) {
         games.forEach((game) => {
             const uniqueItems = new Set(game.players.flat());
+            uniqueItems.forEach((item) => {
+                data.strategems[item].games++;
+            });
+
+            const uniqueWeapons = new Set(game.weapons.flat());
+            uniqueWeapons.forEach((item) => {
+                data.weapons[item].games++;
+            });
+
             data.totalGames++;
             game.players.forEach((loadout) => {
                 data.totalLoadouts++;
@@ -222,24 +245,36 @@ const parseTotals = (games) => {
                     })
 
                     loadout.forEach((otherItem) => {
-                        if (otherItem !== item)
+                        if (otherItem !== item) {
                             if (strategem.companions[otherItem]) {
                                 strategem.companions[otherItem]++;
                             } else {
                                 strategem.companions[otherItem] = 1;
                             }
+                        }
                     })
                 });
             });
 
-            game.weapons.forEach((loadout) => {
+            game.weapons.forEach((loadout, loadoutIndex) => {
                 loadout.forEach((item) => {
-                    if(data.weapons[item]) {
-                        data.weapons[item].total++;
-                    } else {
-                        data.weapons[item] = {
-                            total: 1
-                        }
+                    const weapon = data.weapons[item];
+                    weapon.loadouts++;
+                    weapon.diffs[game.difficulty]++;
+                    weapon.missions[getMissionLength(game.mission)]++;
+
+                    game.modifiers?.forEach((modifier) => {
+                        weapon.modifiers[modifier]++;
+                    })
+
+                    if (game.players.length === game.weapons.length) {
+                        game.players[loadoutIndex].forEach((strategem) => {
+                            if (weapon.companions[strategem]) {
+                                weapon.companions[strategem]++;
+                            } else {
+                                weapon.companions[strategem] = 1;
+                            }
+                        })
                     }
                 });
             });
@@ -263,10 +298,20 @@ const parseTotals = (games) => {
         data.strategems = sorted;
 
         const weapons = data.weapons;
-        
+
+        for (const weaponKey in weapons) {
+            const companions = weapons[weaponKey].companions;
+            weapons[weaponKey].companions = getItemsByCategory(companions);
+
+            const modifiers = weapons[weaponKey].modifiers;
+            weapons[weaponKey].modifiers = Object.fromEntries(
+                Object.entries(modifiers).filter(([key, value]) => value !== 0)
+            );
+        }
+
         const weaponsSorted = Object.fromEntries(Object.entries(weapons)
-            .filter(([key, value]) => value.total > 0)
-            .sort(([, a], [, b]) => b.total - a.total));
+            .filter(([key, value]) => value.loadouts > 0)
+            .sort(([, a], [, b]) => b.loadouts - a.loadouts));
 
         data.weapons = weaponsSorted;
 
@@ -279,8 +324,8 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
- app.get('/test', (req, res) => {
+app.get('/test', (req, res) => {
     res.send('Welcome to my server!');
 });
-    
+
 
