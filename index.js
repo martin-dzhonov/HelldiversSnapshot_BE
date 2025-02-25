@@ -31,7 +31,7 @@ const GameModel = mongoose.model(model_name, gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-        host: "172.31.80.143",//127.0.0.1,
+        host: "54.164.159.200",//127.0.0.1,https://54.164.159.200
         port: 6379,
         keepAlive: true,
         tls: {}
@@ -83,7 +83,7 @@ app.get('/strategem', async (req, res) => {
     };
 
     const isEmptyFilter = Object.keys(filter).length === 0;
-    const cacheKey = `strategem_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+    const cacheKey = `strategem1_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
 
     try {
         const cachedData = await redisClient.get(cacheKey);
