@@ -31,9 +31,10 @@ const GameModel = mongoose.model(model_name, gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-        host: "3.85.90.50",//127.0.0.1,
+        host: "172.31.80.143",//127.0.0.1,
         port: 6379,
-        keepAlive: true
+        keepAlive: true,
+        tls: {}
     }
 });
 
