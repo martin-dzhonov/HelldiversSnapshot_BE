@@ -33,7 +33,7 @@ const redisClient = redis.createClient({
     socket: {
         host: "3.85.90.50",//127.0.0.1,
         port: 6379,
-        tls: {}
+        keepAlive: true
     }
 });
 
