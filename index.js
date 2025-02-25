@@ -82,7 +82,7 @@ app.get('/strategem', async (req, res) => {
     };
 
     const isEmptyFilter = Object.keys(filter).length === 0;
-    const cacheKey = `strategem2_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+    const cacheKey = `strategem_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
 
     try {
         const cachedData = await redisClient.get(cacheKey);
