@@ -31,7 +31,7 @@ const GameModel = mongoose.model(model_name, gameSchema);
 
 const redisClient = redis.createClient({
     socket: {
-        host: "54.164.159.200",//127.0.0.1,https://54.164.159.200
+        host: "127.0.0.1",
         port: 6379,
         tls: {}
     }
@@ -71,6 +71,7 @@ const getDataFiltered = (mongoData) => {
 
     return result;
 }
+
 app.get('/strategem', async (req, res) => {
     const startTime = Date.now();
 
@@ -122,60 +123,21 @@ app.get('/', (req, res) => {
 });
 
 app.get('/games', async (req, res) => {
-    const { faction, patch } = req.query;
-
-    const patchRes = patchPeriods.find((item) => item.id === Number(patch));
-
-    const mongoData = await GameModel.find({
-        faction: faction,
-        createdAt: {
-            $gte: new Date(patchRes.start),
-            $lte: patchRes.end.toLowerCase() === 'present' ? new Date() : new Date(patchRes.end)
-        }
-    })
-
+    const startTime = Date.now();
+    const mongoData = await GameModel.find({})
+    console.log(`Mongo: ${Date.now() - startTime}`);
     res.send(mongoData);
 });
 
-const getDictObj = () => {
-    const strategemNames = Object.keys(strategemsDict);
-    const weaponNames = Object.keys(weaponsDict);
+app.get('/report', async (req, res) => {
+    const startTime = Date.now();
+    const mongoData = await GameModel.find({});
+    console.log(`Mongo: ${Date.now() - startTime}`);
+    const filtered = getDataFiltered(mongoData);
+    console.log(`Filter: ${Date.now() - startTime}`);
 
-    return {
-        totalGames: 0,
-        totalLoadouts: 0,
-        missions: { short: 0, long: 0 },
-        diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
-        strategems: strategemNames.reduce((acc, strategem) => {
-            acc[strategem] = {
-                loadouts: 0,
-                games: 0,
-                companions: {},
-                missions: { short: 0, long: 0 },
-                diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
-                modifiers: missionModifiers.reduce((acc, modifier) => {
-                    acc[modifier] = 0;
-                    return acc;
-                }, {})
-            };
-            return acc;
-        }, {}),
-        weapons: weaponNames.reduce((acc, weapon) => {
-            acc[weapon] = {
-                loadouts: 0,
-                games: 0,
-                companions: {},
-                missions: { short: 0, long: 0 },
-                diffs: { 10: 0, 9: 0, 8: 0, 7: 0 },
-                modifiers: missionModifiers.reduce((acc, modifier) => {
-                    acc[modifier] = 0;
-                    return acc;
-                }, {})
-            };
-            return acc;
-        }, {}),
-    };
-}
+    return res.send(filtered);
+});
 
 const filterByDateRange = (startDateStr, endDateStr, createdAt) => {
     const startDate = new Date(startDateStr);
@@ -218,27 +180,36 @@ const parseTotals = (games) => {
 
     if (games.length > 0) {
         games.forEach((game) => {
-            const uniqueItems = new Set(game.players.flat());
-            uniqueItems.forEach((item) => {
-                data.strategems[item].games++;
+
+            data.total.games++;
+            data.diffs[game.difficulty].games++;
+            data.missions[getMissionLength(game.mission)].games++;
+
+            const uniqueStrats = new Set(game.players.flat());
+            uniqueStrats.forEach((item) => {
+                data.strategems[item].total.games++;
+                data.strategems[item].diffs[game.difficulty].games++;
+                data.strategems[item].missions[getMissionLength(game.mission)].games++;
             });
 
             const uniqueWeapons = new Set(game.weapons.flat());
             uniqueWeapons.forEach((item) => {
-                data.weapons[item].games++;
+                data.weapons[item].total.games++;
+                data.weapons[item].diffs[game.difficulty].games++;
+                data.weapons[item].missions[getMissionLength(game.mission)].games++;
+
             });
 
-            data.totalGames++;
             game.players.forEach((loadout) => {
-                data.totalLoadouts++;
-                data.diffs[game.difficulty]++;
-                data.missions[getMissionLength(game.mission)]++;
+                data.total.loadouts++;
+                data.diffs[game.difficulty].loadouts++;
+                data.missions[getMissionLength(game.mission)].loadouts++;
 
                 loadout.forEach((item) => {
                     const strategem = data.strategems[item];
-                    strategem.loadouts++;
-                    strategem.diffs[game.difficulty]++;
-                    strategem.missions[getMissionLength(game.mission)]++;
+                    strategem.total.loadouts++;
+                    strategem.diffs[game.difficulty].loadouts++;
+                    strategem.missions[getMissionLength(game.mission)].loadouts++;
 
                     game.modifiers?.forEach((modifier) => {
                         strategem.modifiers[modifier]++;
@@ -259,9 +230,9 @@ const parseTotals = (games) => {
             game.weapons.forEach((loadout, loadoutIndex) => {
                 loadout.forEach((item) => {
                     const weapon = data.weapons[item];
-                    weapon.loadouts++;
-                    weapon.diffs[game.difficulty]++;
-                    weapon.missions[getMissionLength(game.mission)]++;
+                    weapon.total.loadouts++;
+                    weapon.diffs[game.difficulty].loadouts++;
+                    weapon.missions[getMissionLength(game.mission)].loadouts++;
 
                     game.modifiers?.forEach((modifier) => {
                         weapon.modifiers[modifier]++;
@@ -293,8 +264,8 @@ const parseTotals = (games) => {
         }
 
         const sorted = Object.fromEntries(Object.entries(strategems)
-            .filter(([key, value]) => value.loadouts > 0)
-            .sort(([, a], [, b]) => b.loadouts - a.loadouts));
+            .filter(([key, value]) => value.total.loadouts > 0)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
         data.strategems = sorted;
 
         const weapons = data.weapons;
@@ -310,8 +281,8 @@ const parseTotals = (games) => {
         }
 
         const weaponsSorted = Object.fromEntries(Object.entries(weapons)
-            .filter(([key, value]) => value.loadouts > 0)
-            .sort(([, a], [, b]) => b.loadouts - a.loadouts));
+            .filter(([key, value]) => value.total.loadouts > 0)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
 
         data.weapons = weaponsSorted;
 
@@ -329,3 +300,117 @@ app.get('/test', (req, res) => {
 });
 
 
+const getDictObj = () => {
+    const strategemNames = Object.keys(strategemsDict);
+    const weaponNames = Object.keys(weaponsDict);
+
+    return {
+        total: {
+            loadouts: 0,
+            games: 0
+        },
+        missions: {
+            short: {
+                loadouts: 0,
+                games: 0
+            },
+            long: {
+                loadouts: 0,
+                games: 0
+            },
+        },
+        diffs: {
+            10: {
+                loadouts: 0,
+                games: 0
+            }, 9: {
+                loadouts: 0,
+                games: 0
+            }, 8: {
+                loadouts: 0,
+                games: 0
+            }, 7: {
+                loadouts: 0,
+                games: 0
+            }
+        },
+        strategems: strategemNames.reduce((acc, strategem) => {
+            acc[strategem] = {
+                total: {
+                    loadouts: 0,
+                    games: 0
+                },
+                missions: {
+                    short: {
+                        loadouts: 0,
+                        games: 0
+                    },
+                    long: {
+                        loadouts: 0,
+                        games: 0
+                    },
+                },
+                diffs: {
+                    10: {
+                        loadouts: 0,
+                        games: 0
+                    }, 9: {
+                        loadouts: 0,
+                        games: 0
+                    }, 8: {
+                        loadouts: 0,
+                        games: 0
+                    }, 7: {
+                        loadouts: 0,
+                        games: 0
+                    }
+                },
+                companions: {},
+                modifiers: missionModifiers.reduce((acc, modifier) => {
+                    acc[modifier] = 0;
+                    return acc;
+                }, {})
+            };
+            return acc;
+        }, {}),
+        weapons: weaponNames.reduce((acc, weapon) => {
+            acc[weapon] = {
+                total: {
+                    loadouts: 0,
+                    games: 0
+                },
+                missions: {
+                    short: {
+                        loadouts: 0,
+                        games: 0
+                    },
+                    long: {
+                        loadouts: 0,
+                        games: 0
+                    },
+                },
+                diffs: {
+                    10: {
+                        loadouts: 0,
+                        games: 0
+                    }, 9: {
+                        loadouts: 0,
+                        games: 0
+                    }, 8: {
+                        loadouts: 0,
+                        games: 0
+                    }, 7: {
+                        loadouts: 0,
+                        games: 0
+                    }
+                },
+                companions: {},
+                modifiers: missionModifiers.reduce((acc, modifier) => {
+                    acc[modifier] = 0;
+                    return acc;
+                }, {})
+            };
+            return acc;
+        }, {}),
+    };
+}
