@@ -74,7 +74,6 @@ app.get('/strategem', async (req, res) => {
 
     const cachedData = await redisClient.hGetAll(cacheKey);
     const cacheHit = Object.keys(cachedData).length > 0;
-    console.log(cachedData);
     console.log('------------------')
     console.log(`Cache ${cacheHit ? 'Hit' : 'Miss'}: ${Date.now() - startTime}ms`);
 
