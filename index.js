@@ -57,6 +57,88 @@ app.use(function (req, res, next) {
     next();
 });
 
+app.get('/strategem', async (req, res) => {
+    const startTime = Date.now();
+
+    const { diff, mission } = req.query;
+    const validMissions = getMissionsByLength(mission);
+
+    const filter = {
+        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
+        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+    };
+
+    const isEmptyFilter = Object.keys(filter).length === 0;
+
+    const cacheKey = `key_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+
+    const cachedData = await redisClient.hGetAll(cacheKey);
+    const cacheHit = Object.keys(cachedData).length > 0;
+    console.log(cachedData);
+    console.log('------------------')
+    console.log(`Cache ${cacheHit ? 'Hit' : 'Miss'}: ${Date.now() - startTime}ms`);
+
+    if (cacheHit) {
+        const parsedData = Object.fromEntries(
+            Object.entries(cachedData).map(([key, value]) => [key, JSON.parse(value)])
+        );
+
+        console.log(`Total: ${Date.now() - startTime}ms`);
+
+        return res.send(parsedData);
+    } else {
+        const mongoData = await GameModel.find(filter);
+        console.log(`Mongo GET: ${Date.now() - startTime}ms`);
+
+        const filtered = getDataFiltered(mongoData);
+
+        console.log(`Filter: ${Date.now() - startTime}ms`);
+
+        for (const [key, value] of Object.entries(filtered)) {
+            await redisClient.hSet(cacheKey, key, JSON.stringify(value), 'NX');
+        }
+
+        console.log(`Redis SET: ${Date.now() - startTime}ms`);
+
+        await redisClient.expire(cacheKey, 36000);
+
+        console.log(`Total: ${Date.now() - startTime}ms`);
+
+        return res.send(filtered);
+    }
+});
+
+app.get('/flush_cache', async (req, res) => {
+    try {
+        await redisClient.flushDb();
+        return res.send("Success");
+    } catch (err) {
+        console.error('Failed to flush Redis:', err);
+    }
+});
+
+app.get('/games', async (req, res) => {
+    const startTime = Date.now();
+    const mongoData = await GameModel.find({})
+    console.log(`Mongo Count ${mongoData.length}: ${Date.now() - startTime}`);
+    res.send(mongoData);
+});
+
+app.get('/report', async (req, res) => {
+    const startTime = Date.now();
+    const mongoData = await GameModel.find({});
+    console.log(`Mongo Count ${mongoData.length}: ${Date.now() - startTime}`);
+
+    const filtered = getDataFiltered(mongoData);
+    console.log(`Filter: ${Date.now() - startTime}`);
+
+    return res.send(filtered);
+});
+
+app.get('/', (req, res) => {
+    res.send('Welcome to my server!');
+});
+
 const getDataFiltered = (mongoData) => {
     const dataSegmented = factions.map((faction) =>
         patchPeriods.map((patch) => mongoData.filter((game) =>
@@ -72,72 +154,6 @@ const getDataFiltered = (mongoData) => {
     return result;
 }
 
-app.get('/strategem', async (req, res) => {
-    const startTime = Date.now();
-
-    const { diff, mission } = req.query;
-    const validMissions = getMissionsByLength(mission);
-    const filter = {
-        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
-        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-    };
-
-    const isEmptyFilter = Object.keys(filter).length === 0;
-    const cacheKey = `strategem2_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
-
-    try {
-        const cachedData = await redisClient.get(cacheKey);
-        console.log(`Redis Get: ${Date.now() - startTime}`);
-
-        if (cachedData) {
-            console.log(`Cache hit: ${Date.now() - startTime}`);
-
-            const filtered = getDataFiltered(JSON.parse(cachedData));
-            console.log(`Filter: ${Date.now() - startTime}`);
-
-            return res.send(filtered);
-        } else {
-            console.log(`Cache miss: ${Date.now() - startTime}`);
-
-            const mongoData = await GameModel.find(filter);
-            console.log(`Mongo: ${Date.now() - startTime}`);
-
-            await redisClient.set(cacheKey, JSON.stringify(mongoData), {
-                EX: 3600,
-            });
-            console.log(`Redis Set: ${Date.now() - startTime}`);
-
-            const filtered = getDataFiltered(mongoData);
-            console.log(`Filter: ${Date.now() - startTime}`);
-
-            return res.send(filtered);
-        }
-    } catch (err) {
-        console.error(err);
-        return res.status(500).send('Internal Server Error');
-    }
-});
-
-app.get('/', (req, res) => {
-    res.send('Welcome to my server!');
-});
-
-app.get('/games', async (req, res) => {
-    const startTime = Date.now();
-    const mongoData = await GameModel.find({})
-    console.log(`Mongo: ${Date.now() - startTime}`);
-    res.send(mongoData);
-});
-
-app.get('/report', async (req, res) => {
-    const startTime = Date.now();
-    const mongoData = await GameModel.find({});
-    console.log(`Mongo: ${Date.now() - startTime}`);
-    const filtered = getDataFiltered(mongoData);
-    console.log(`Filter: ${Date.now() - startTime}`);
-
-    return res.send(filtered);
-});
 
 const filterByDateRange = (startDateStr, endDateStr, createdAt) => {
     const startDate = new Date(startDateStr);
