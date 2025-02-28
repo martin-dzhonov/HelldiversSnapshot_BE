@@ -52,7 +52,7 @@ http://localhost:8080/strategem?diff=${difficulty}&mission=${mission}`
 
 Consolidated, unfiltered:
 ```sh
-http://localhost:8080/report`
+http://localhost:8080/report
 ```
 
 ## License
