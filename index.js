@@ -96,7 +96,6 @@ app.get('/strategem', async (req, res) => {
         for (const [key, value] of Object.entries(filtered)) {
             await redisClient.hSet(cacheKey, key, JSON.stringify(value), 'NX');
         }
-
         console.log(`Redis SET: ${Date.now() - startTime}ms`);
 
         await redisClient.expire(cacheKey, 36000);
@@ -117,11 +116,21 @@ app.get('/flush_cache', async (req, res) => {
 });
 
 app.get('/games', async (req, res) => {
-    const startTime = Date.now();
-    const mongoData = await GameModel.find({})
-    console.log(`Mongo Count ${mongoData.length}: ${Date.now() - startTime}`);
+    const { faction, patch } = req.query;
+
+    const patchRes = patchPeriods.find((item) => item.id === Number(patch));
+
+    const mongoData = await GameModel.find({
+        faction: faction,
+        createdAt: {
+            $gte: new Date(patchRes.start),
+            $lte: patchRes.end.toLowerCase() === 'present' ? new Date() : new Date(patchRes.end)
+        }
+    })
+
     res.send(mongoData);
 });
+
 
 app.get('/report', async (req, res) => {
     const startTime = Date.now();
