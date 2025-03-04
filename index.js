@@ -33,27 +33,6 @@ const model_test = "matches_test";
 const GameModel = mongoose.model(model_name, gameSchema);
 const TestModel = mongoose.model(model_test, gameSchema); // Different model name
 
-
-const redisClient = redis.createClient({
-    socket: {
-        host: "127.0.0.1",
-        port: 6379,
-        tls: {}
-    }
-});
-
-redisClient.on("error", function (err) {
-    throw err;
-});
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log('Connected to Redis');
-    } catch (err) {
-        console.error('Failed to connect to Redis:', err);
-    }
-})();
-
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -62,63 +41,84 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/strategem', async (req, res) => {
-    const startTime = Date.now();
+// const redisClient = redis.createClient({
+//     socket: {
+//         host: "127.0.0.1",
+//         port: 6379,
+//         tls: {}
+//     }
+// });
 
-    const { diff, mission } = req.query;
-    const validMissions = getMissionsByLength(mission);
+// redisClient.on("error", function (err) {
+//     throw err;
+// });
+// (async () => {
+//     try {
+//         await redisClient.connect();
+//         console.log('Connected to Redis');
+//     } catch (err) {
+//         console.error('Failed to connect to Redis:', err);
+//     }
+// })();
 
-    const filter = {
-        ...((diff && diff !== "0") && { difficulty: Number(diff) }),
-        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-    };
 
-    const isEmptyFilter = Object.keys(filter).length === 0;
+// app.get('/strategem', async (req, res) => {
+//     const startTime = Date.now();
 
-    const cacheKey = `key_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
+//     const { diff, mission } = req.query;
+//     const validMissions = getMissionsByLength(mission);
 
-    const cachedData = await redisClient.hGetAll(cacheKey);
-    const cacheHit = Object.keys(cachedData).length > 0;
-    console.log('------------------')
-    console.log(`Cache ${cacheHit ? 'Hit' : 'Miss'}: ${Date.now() - startTime}ms`);
+//     const filter = {
+//         ...((diff && diff !== "0") && { difficulty: Number(diff) }),
+//         ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+//     };
 
-    if (cacheHit) {
-        const parsedData = Object.fromEntries(
-            Object.entries(cachedData).map(([key, value]) => [key, JSON.parse(value)])
-        );
+//     const isEmptyFilter = Object.keys(filter).length === 0;
 
-        console.log(`Total: ${Date.now() - startTime}ms`);
+//     const cacheKey = `key_${model_name}:${isEmptyFilter ? 'all' : JSON.stringify(filter)}`;
 
-        return res.send(parsedData);
-    } else {
-        const mongoData = await GameModel.find(filter);
-        console.log(`Mongo GET: ${Date.now() - startTime}ms`);
+//     const cachedData = await redisClient.hGetAll(cacheKey);
+//     const cacheHit = Object.keys(cachedData).length > 0;
+//     console.log('------------------')
+//     console.log(`Cache ${cacheHit ? 'Hit' : 'Miss'}: ${Date.now() - startTime}ms`);
 
-        const filtered = getDataFiltered(mongoData);
+//     if (cacheHit) {
+//         const parsedData = Object.fromEntries(
+//             Object.entries(cachedData).map(([key, value]) => [key, JSON.parse(value)])
+//         );
 
-        console.log(`Filter: ${Date.now() - startTime}ms`);
+//         console.log(`Total: ${Date.now() - startTime}ms`);
 
-        for (const [key, value] of Object.entries(filtered)) {
-            await redisClient.hSet(cacheKey, key, JSON.stringify(value), 'NX');
-        }
-        console.log(`Redis SET: ${Date.now() - startTime}ms`);
+//         return res.send(parsedData);
+//     } else {
+//         const mongoData = await GameModel.find(filter);
+//         console.log(`Mongo GET: ${Date.now() - startTime}ms`);
 
-        await redisClient.expire(cacheKey, 36000);
+//         const filtered = getDataFiltered(mongoData);
 
-        console.log(`Total: ${Date.now() - startTime}ms`);
+//         console.log(`Filter: ${Date.now() - startTime}ms`);
 
-        return res.send(filtered);
-    }
-});
+//         for (const [key, value] of Object.entries(filtered)) {
+//             await redisClient.hSet(cacheKey, key, JSON.stringify(value), 'NX');
+//         }
+//         console.log(`Redis SET: ${Date.now() - startTime}ms`);
 
-app.get('/flush_cache', async (req, res) => {
-    try {
-        await redisClient.flushDb();
-        return res.send("Success");
-    } catch (err) {
-        console.error('Failed to flush Redis:', err);
-    }
-});
+//         await redisClient.expire(cacheKey, 36000);
+
+//         console.log(`Total: ${Date.now() - startTime}ms`);
+
+//         return res.send(filtered);
+//     }
+// });
+
+// app.get('/flush_cache', async (req, res) => {
+//     try {
+//         await redisClient.flushDb();
+//         return res.send("Success");
+//     } catch (err) {
+//         console.error('Failed to flush Redis:', err);
+//     }
+// });
 
 app.get('/games', async (req, res) => {
     const { faction, patch } = req.query;
