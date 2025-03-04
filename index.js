@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 const port = process.env.PORT || 8080;
-
+ 
 const mongoPass = encodeURIComponent('Crtstr#21')
 
 mongoose.connect(`mongodb+srv://martindzhonov:${mongoPass}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
@@ -26,8 +26,13 @@ const gameSchema = new mongoose.Schema({
     weapons: [],
     modifiers: [],
 })
+
 const model_name = "matches";
+const model_test = "matches_test";
+
 const GameModel = mongoose.model(model_name, gameSchema);
+const TestModel = mongoose.model(model_test, gameSchema); // Different model name
+
 
 const redisClient = redis.createClient({
     socket: {
@@ -131,6 +136,13 @@ app.get('/games', async (req, res) => {
     res.send(mongoData);
 });
 
+app.get('/gamesall', async (req, res) => {
+    const { faction, patch } = req.query;
+    const patchRes = patchPeriods.find((item) => item.id === Number(patch));
+    const mongoData = await GameModel.find({
+    })
+    res.send(mongoData);
+});
 
 app.get('/report', async (req, res) => {
     const startTime = Date.now();
@@ -141,6 +153,51 @@ app.get('/report', async (req, res) => {
     console.log(`Filter: ${Date.now() - startTime}`);
 
     return res.send(filtered);
+});
+
+async function removeDuplicateIds(Model) {
+    const duplicates = await Model.aggregate([
+      {
+        $group: {
+          _id: "$id",
+          ids: { $push: "$_id" },
+          count: { $sum: 1 }
+        }
+      },
+      { $match: { count: { $gt: 1 } } }
+    ]);
+  
+    let totalDeleted = 0;
+  
+    for (const doc of duplicates) {
+      const idsToRemove = doc.ids.slice(1);
+      const result = await Model.deleteMany({ _id: { $in: idsToRemove } });
+      totalDeleted += result.deletedCount;
+    }
+  
+    return totalDeleted;
+  }
+  
+  app.get('/remove_dups', async (req, res) => {
+    const deletedCount = await removeDuplicateIds(GameModel);
+    res.send(`Removed ${deletedCount} duplicate documents.`);
+  });
+
+
+app.get('/seed_new', async (req, res) => {
+    const matches = await GameModel.find(); // Get all documents
+  if (matches.length === 0) {
+    console.log("No documents to copy.");
+    return;
+  }
+
+  const copied = await TestModel.insertMany(matches.map(doc => {
+    const obj = doc.toObject();
+    delete obj._id; // Remove _id to avoid duplication issues
+    return obj;
+  }));
+
+  res.send(`Copied ${copied.length} documents.`)
 });
 
 app.get('/', (req, res) => {
