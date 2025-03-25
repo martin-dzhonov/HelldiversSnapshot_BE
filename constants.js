@@ -34,6 +34,7 @@ const strategemsDict = {
     mines_at: createStrategem("Anti-Tank Mines", "MD-17 Anti-Tank Mines", "Defensive"),
     mines_incendiary: createStrategem("Incendiary Mines", "MD-I4 Incendiary Mines", "Defensive"),
     mines_infantry: createStrategem("Anti-Personnel Minefield", "MD-6 Anti-Personnel Minefield", "Defensive"),
+    mines_gas: createStrategem("Gas Mines", "MD-8 Gas Mines", "Defensive"),
     orbital_airburst: createStrategem("Orbital Airburst Strike", "Orbital Airburst Strike", "Eagle/Orbital"),
     orbital_ems: createStrategem("Orbital EMS Strike", "Orbital EMS Strike", "Eagle/Orbital"),
     orbital_gas: createStrategem("Orbital Gas Strike", "Orbital Gas Strike", "Eagle/Orbital"),
@@ -186,6 +187,7 @@ const patchPeriods = [
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];
+
 const itemCategories = ["All", "Eagle/Orbital", "Support", "Defensive"];
 
 module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict };
