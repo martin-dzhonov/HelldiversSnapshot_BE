@@ -16,26 +16,9 @@ const port = process.env.PORT || 8080;
 const mongoPass = encodeURIComponent('Crtstr#21')
 
 mongoose.connect(`mongodb+srv://martindzhonov:${mongoPass}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
-const gameSchema = new mongoose.Schema({
-    id: Number,
-    faction: String,
-    planet: String,
-    difficulty: Number,
-    mission: String,
-    createdAt: Date,
-    players: [],
-    weapons: [],
-    modifiers: [],
-})
 
-const model_name = "matches";
-const model_test = "matches_test";
-
-const GameModel = mongoose.model(model_name, gameSchema);
-const TestModel = mongoose.model(model_test, gameSchema); // Different model name
-const TestModel1 = mongoose.model("matches_test1", new mongoose.Schema({
+const gameSchema =  new mongoose.Schema({
     id: { type: Number, unique: true },
-    fileName: String,
     faction: String,
     planet: String,
     difficulty: Number,
@@ -49,7 +32,45 @@ const TestModel1 = mongoose.model("matches_test1", new mongoose.Schema({
         }
     ],
     modifiers: [],
-}));
+});
+
+const GameModel = mongoose.model("matches", gameSchema);
+const GameModel_1 = mongoose.model("matches_test1", gameSchema);
+
+// const gameSchema = new mongoose.Schema({
+//     id: Number,
+//     faction: String,
+//     planet: String,
+//     difficulty: Number,
+//     mission: String,
+//     createdAt: Date,
+//     players: [],
+//     weapons: [],
+//     modifiers: [],
+// })
+
+// const model_name = "matches";
+// const model_test = "matches_test";
+
+// const GameModel = mongoose.model(model_name, gameSchema);
+// const TestModel = mongoose.model(model_test, gameSchema); // Different model name
+
+// const TestModel1 = mongoose.model("matches_test1", new mongoose.Schema({
+//     id: { type: Number, unique: true },
+//     faction: String,
+//     planet: String,
+//     difficulty: Number,
+//     mission: String,
+//     createdAt: Date,
+//     players: [
+//         {
+//             strategem: [String],
+//             weapons: [String],
+//             level: String
+//         }
+//     ],
+//     modifiers: [],
+// }));
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -71,7 +92,7 @@ app.get('/games', async (req, res) => {
     };
     const patchPeriod = patchPeriods.find((item) => item.id === Number(patch));
 
-    const mongoData = await TestModel1.find({
+    const mongoData = await GameModel.find({
         faction: faction,
         createdAt: {
             $gte: new Date(patchPeriod.start),
@@ -84,17 +105,9 @@ app.get('/games', async (req, res) => {
     res.send(mongoData);
 });
 
-app.get('/gamesall', async (req, res) => {
-    const { faction, patch } = req.query;
-    const patchRes = patchPeriods.find((item) => item.id === Number(patch));
-    const mongoData = await GameModel.find({
-    })
-    res.send(mongoData);
-});
-
 app.get('/report', async (req, res) => {
     const startTime = Date.now();
-    const mongoData = await TestModel1.find({});
+    const mongoData = await GameModel.find({});
     console.log(`Mongo Count ${mongoData.length}: ${Date.now() - startTime}`);
 
     const filtered = getDataFiltered(mongoData);
@@ -155,7 +168,7 @@ const getDataFiltered = (mongoData) => {
             game.faction === faction &&
             filterByDateRange(patch.start, patch.end, game.createdAt)))
     );
-
+    
     const result = factions.reduce((acc, key, index) => {
         acc[key] = dataSegmented[index].map(patchData => parseTotals1(patchData));
         return acc;
@@ -194,7 +207,6 @@ const strategemCompanionsByCategory = (companions) => {
     return {
         all: sorted.slice(0, 4),
         eagle: sorted.filter((item) => {
-            console.log(item)
             return strategemsDict[item.name].category === "Eagle/Orbital";
         }).slice(0, 4),
         support: sorted.filter((item) => {

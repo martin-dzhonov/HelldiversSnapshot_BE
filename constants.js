@@ -7,8 +7,9 @@ const createStrategem = (baseName, fullName, category) => ({
 const strategemsDict = {
     backpack_ballistic: createStrategem("Ballistic Shield Backpack", "SH-20 Ballistic Shield Backpack", "Support"),
     backpack_jump: createStrategem("Jump Pack", "LIFT-850 Jump Pack", "Support"),
+    hover_pack: createStrategem("Hover Pack", "LIFT-860 Hover Pack", "Support"),
     backpack_shield: createStrategem("Shield Generator Pack", "SH-20 Shield Generator Pack", "Support"),
-    backpack_shield_directional: createStrategem("Directional Shield", "Directional Shield", "Support"),
+    backpack_shield_directional: createStrategem("Directional Shield", "SH-51 Directional Shield", "Support"),
     backpack_supply: createStrategem("Supply Pack", "B-1 Supply Pack", "Support"),
     backpack_hellbomb: createStrategem("Portable Hellbomb", "B-100 Portable Hellbomb", "Support"),
     barrage_120: createStrategem("Orbital 120MM HE Barrage", "Orbital 120MM HE Barrage", "Eagle/Orbital"),
@@ -24,11 +25,12 @@ const strategemsDict = {
     eagle_smoke: createStrategem("Eagle Smoke Strike", "Eagle Smoke Strike", "Eagle/Orbital"),
     eagle_strafe: createStrategem("Eagle Strafing Run", "Eagle Strafing Run", "Eagle/Orbital"),
     encampment_hmg: createStrategem("HMG Emplacement", "E/MG-101 HMG Emplacement", "Defensive"),
-    encampment_at: createStrategem("Anti-Tank Emplacement", "E/MG-101 HMG Emplacement", "Defensive"),
+    encampment_at: createStrategem("Anti-Tank Emplacement", "E/AT-12 Anti-Tank Emplacement", "Defensive"),
+    grenade_encampment: createStrategem("Grenadier Battlement", "E/GL-21 Grenadier Battlement", "Defensive"),
     exo_emancipator: createStrategem("Emancipator Exosuit", "EXO-49 Emancipator Exosuit", "Support"),
     exo_patriot: createStrategem("Patriot Exosuit", "EXO-45 Patriot Exosuit", "Support"),
-    frv: createStrategem("Fast Recon Vehicle", "Fast Recon Vehicle", "Support"),
-    guard_breath: createStrategem("Guard Dog Breath", "Guard Dog Breath", "Support"),
+    frv: createStrategem("Fast Recon Vehicle", "M-102 Fast Recon Vehicle", "Support"),
+    guard_breath: createStrategem("Guard Dog Breath", "AX/TX-13 Guard Dog Breath", "Support"),
     guard_dog: createStrategem("Guard Dog", "AD-334 Guard Dog", "Support"),
     guard_rover: createStrategem("Guard Dog Rover", "AX/LAS-5 Guard Dog Rover", "Support"),
     mines_at: createStrategem("Anti-Tank Mines", "MD-17 Anti-Tank Mines", "Defensive"),
@@ -45,7 +47,7 @@ const strategemsDict = {
     sentry_arc: createStrategem("Tesla Tower", "A/ARC-3 Tesla Tower", "Defensive"),
     sentry_autocannon: createStrategem("Autocannon Sentry", "A/AC-8 Autocannon Sentry", "Defensive"),
     sentry_ems: createStrategem("EMS Mortar Sentry", "A/M-23 EMS Mortar Sentry", "Defensive"),
-    sentry_flame: createStrategem("Flame Sentry", "Flame Sentry", "Defensive"),
+    sentry_flame: createStrategem("Flame Sentry", "A/FLAM-40 Flame Sentry", "Defensive"),
     sentry_gatling: createStrategem("Gatling Sentry", "A/G-16 Gatling Sentry", "Defensive"),
     sentry_mg: createStrategem("Machine Gun Sentry", "A/MG-43 Machine Gun Sentry", "Defensive"),
     sentry_mortar: createStrategem("Mortar Sentry", "A/M-12 Mortar Sentry", "Defensive"),
@@ -67,8 +69,8 @@ const strategemsDict = {
     sup_recoilless_rifle: createStrategem("Recoilless Rifle", "GR-8 Recoilless Rifle", "Support"),
     sup_spear: createStrategem("Spear", "FAF-14 Spear", "Support"),
     sup_stalwart: createStrategem("Stalwart", "M-105 Stalwart", "Support"),
-    sup_sterilizer: createStrategem("Sterilizer", "Sterilizer", "Support"),
-    sup_wasp: createStrategem("StA-X3 W.A.S.P. Launcher", "StA-X3 W.A.S.P. Launcher", "Support"),
+    sup_sterilizer: createStrategem("Sterilizer", "TX-41 Sterilizer", "Support"),
+    sup_wasp: createStrategem("Wasp", "StA-X3 W.A.S.P. Launcher", "Support"),
 };
 
 const weaponsDict = {
@@ -131,6 +133,9 @@ const weaponsDict = {
     grenade_smoke: createStrategem("Smoke", "G-3 Smoke", "Throwable", 'webp'),
     grenade_termite: createStrategem("Thermite", "G-123 Thermite", "Throwable", 'webp'),
     throwing_knife: createStrategem("Throwing Knife", "K-2 Throwing Knife", "Throwable", 'webp'),
+    deadeye: createStrategem("Deadeye", "R-6 Deadeye", "Primary", 'webp'),
+    talon: createStrategem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
+    dynamite: createStrategem("Dynamite", "TED-63 Dynamite", "Throwable", 'webp'),
 };
 
 const missionNames = [
@@ -180,14 +185,14 @@ const missionModifiers = [
 ];
 
 const patchPeriods = [
-    { id: 0, name: "Servants of Freedom", start: "02/08/2025", end: "Present" },
-    { id: 1, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
-    { id: 2, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
-    { id: 3, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
+    { id: 0, name: "Borderline Justice", start: "03/19/2025", end: "Present" },
+    { id: 1, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
+    { id: 2, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
+    { id: 3, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+    { id: 4, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];
 
-const itemCategories = ["All", "Eagle/Orbital", "Support", "Defensive"];
 
 module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict };
