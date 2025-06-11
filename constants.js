@@ -4,6 +4,26 @@ const createStrategem = (baseName, fullName, category) => ({
     category,
 });
 
+const armorNames = [
+    'Servo-Assisted', 
+    'Fortified', 
+    'Extra Padding',
+    'Med-Kit',
+    'Engineering Kit',
+    'Inflammable',
+    'Advanced Filtration',
+    'Siege-Ready',
+    'Gunslinger',
+    'Democracy Protects',
+    'Scout',
+    'Electrical Conduit',
+    'Unflinching',
+    'Acclimated',
+    'Integrated Explosives',
+    'Reinforced Epaulettes',
+    'Peak Physique'
+];
+
 const strategemsDict = {
     backpack_ballistic: createStrategem("Ballistic Shield Backpack", "SH-20 Ballistic Shield Backpack", "Support"),
     backpack_jump: createStrategem("Jump Pack", "LIFT-850 Jump Pack", "Support"),
@@ -71,6 +91,7 @@ const strategemsDict = {
     sup_stalwart: createStrategem("Stalwart", "M-105 Stalwart", "Support"),
     sup_sterilizer: createStrategem("Sterilizer", "TX-41 Sterilizer", "Support"),
     sup_wasp: createStrategem("Wasp", "StA-X3 W.A.S.P. Launcher", "Support"),
+    flag: createStrategem("One True Flag", "One True Flag", "Support"),
 };
 
 const weaponsDict = {
@@ -136,6 +157,9 @@ const weaponsDict = {
     deadeye: createStrategem("Deadeye", "R-6 Deadeye", "Primary", 'webp'),
     talon: createStrategem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
     dynamite: createStrategem("Dynamite", "TED-63 Dynamite", "Throwable", 'webp'),
+    amendment: createStrategem("Dynamite", "TED-63 Dynamite", "Primary", 'webp'),
+    sabre: createStrategem("Sabre", "TED-63 Dynamite", "Secondary", 'webp'),
+    grenade_pyro: createStrategem("Pyrotech", "TED-63 Dynamite", "Throwable", 'webp'),
 };
 
 const missionNames = [
@@ -185,14 +209,15 @@ const missionModifiers = [
 ];
 
 const patchPeriods = [
-    { id: 0, name: "Borderline Justice", start: "03/19/2025", end: "Present" },
-    { id: 1, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
-    { id: 2, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
-    { id: 3, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
-    { id: 4, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
+    { id: 0, name: "Masters Of Ceremony", start: "05/15/2025", end: "Present" },
+    { id: 1, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
+    { id: 2, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
+    { id: 3, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
+    { id: 4, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+    { id: 5, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];
 
 
-module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict };
+module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict, armorNames };
