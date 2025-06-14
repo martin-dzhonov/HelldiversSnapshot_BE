@@ -8,19 +8,6 @@ https://utm7j5pjvi.us-east-1.awsapprunner.com/
 
 ## Usage
 
-Run the project with:
-
-```sh
-npm run
-```
-
-## Endpoints
-
-Base:
-```sh
-http://localhost:8080/
-```
-
 Raw Mongo Data:
 ```sh
 /games?faction=terminid&patch=0&difficulty=0&mission=All
@@ -64,6 +51,19 @@ Clone the repository and install dependencies:
 
 ```sh
 npm install
+```
+
+Run the project with:
+
+```sh
+npm run
+```
+
+## Port
+
+Base:
+```sh
+http://localhost:8080/
 ```
 
 ### Installing Redis on Windows
