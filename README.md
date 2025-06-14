@@ -3,8 +3,8 @@
 ## Public API Link
 
 ```sh
-[http://localhost:8080/games
-](https://utm7j5pjvi.us-east-1.awsapprunner.com/)```
+https://utm7j5pjvi.us-east-1.awsapprunner.com/
+```
 
 ## Installation
 
