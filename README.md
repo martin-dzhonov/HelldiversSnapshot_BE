@@ -43,7 +43,7 @@ Values:
 
 Consolidated data for all patches:
 ```sh
-http://localhost:8080/report
+/report
 ```
 ## Installation
 
