@@ -4,6 +4,7 @@ const createStrategem = (baseName, fullName, category) => ({
     category,
 });
 
+
 const armorNames = [
     'Servo-Assisted', 
     'Fortified', 
@@ -184,7 +185,10 @@ const missionNames = [
         "COLLECT GLOOM SPORE READINGS",
         "EXTRACT RESEARCH PROBE DATA",
         "COLLECT GLOOM-INFUSED OIL",
-        "CHART TERMINID TUNNELS"
+        "CHART TERMINID TUNNELS",
+        "FREE THE CITY",
+        "TAKE DOWN OVERSHIP",
+        "EVACUATE CITIZENS"
     ],
     [
         "ERADICATE TERMINID SWARM",
@@ -194,7 +198,8 @@ const missionNames = [
         "EVACUATE HIGH-VALUE ASSETS",
         "DEFEND EVACUATION SITE",
         "RETRIEVE ESSENTIAL PERSONNEL",
-        "BLITZ: SECURE RESEARCH SITE"
+        "BLITZ: SECURE RESEARCH SITE",
+        "REPEL INVASION FLEET"
     ],
 ];
 

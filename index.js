@@ -106,6 +106,107 @@ app.get('/games', async (req, res) => {
     res.send(mongoData);
 });
 
+app.get('/loadouts', async (req, res) => {
+    const startTime = Date.now();
+    const mongoData = await GameModel.find({});
+    console.log(`Mongo Count ${mongoData.length}: ${Date.now() - startTime}`);
+
+    const dataSegmented = factions.map((faction) =>
+        patchPeriods.map((patch) => mongoData.filter((game) =>
+            game.faction === faction &&
+            filterByDateRange(patch.start, patch.end, game.createdAt)))
+    )
+
+    const result = factions.reduce((acc, key, index) => {
+        acc[key] = dataSegmented[index].map(patchData => getLoadouts(patchData));
+        return acc;
+    }, {});
+
+    return res.send(result);
+});
+const getLoadouts = (games) => {
+    const keysArr = ['strategem', 'weapons'];
+
+    const data = {
+        'strategem': {},
+        'weapons': {}
+    };
+    // const data1 = {
+    // }
+    // if (games.length > 0) {
+    //     games.forEach((game) => {
+    //         game.players.forEach((player) => {
+    //             if (player) {
+    //                 if(player.strategem && player.weapons){
+    //                     if(player.strategem.length > 0 && player.weapons.length > 0){
+    //                         const allItems = player.strategem.concat(player.weapons);
+    //                         const sorted = allItems.sort().join(',');
+    //                         const loadout = JSON.stringify(sorted)
+    //                         if (data1[loadout]) {
+    //                             data1[loadout]++;
+    //                         } else {
+    //                             data1[loadout] = 1;
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         })
+    //     })
+
+
+    //     const res1 = Object.fromEntries(
+    //         Object.entries(data1).filter(([_, value]) => value >= 2)
+    //             .sort(([, a], [, b]) => b - a).slice(0, 50)
+    //     );
+
+
+
+    //     return res1;
+    // }
+    if (games.length > 0) {
+        games.forEach((game) => {
+            keysArr.forEach((key) => {
+                game.players.forEach((player) => {
+                    if (player) {
+                        if (player[key] !== null && player[key] !== undefined) {
+                          if (player[key]?.length > 0) {
+                                const sorted = player[key].sort().join(',');
+                                const loadout = JSON.stringify(sorted)
+                                if(data[key][loadout]){
+                                    data[key][loadout]++;
+                                } else{
+                                    data[key][loadout] = 1;
+                                }
+                            }
+                        }
+                    }
+                })
+            })
+        })
+
+        const strategemData = data.strategem;
+
+        const strategem = Object.fromEntries(
+          Object.entries(strategemData).filter(([_, value]) => value >= 2)
+          .sort(([, a], [, b]) => b - a).slice(0, 50)
+        );
+
+        const weaponsDat = data.weapons;
+
+        const weapons = Object.fromEntries(
+          Object.entries(weaponsDat).filter(([_, value]) => value >= 2)
+          .sort(([, a], [, b]) => b - a).slice(0, 50)
+        );
+
+
+        return { strategem, weapons };
+    }
+    return null;
+}
+
+
+
+
 app.get('/report', async (req, res) => {
     const startTime = Date.now();
     const mongoData = await GameModel.find({});
@@ -171,7 +272,7 @@ const getDataFiltered = (mongoData) => {
     )
 
     const result = factions.reduce((acc, key, index) => {
-        acc[key] = dataSegmented[index].map(patchData => parseTotals1(patchData));
+        acc[key] = dataSegmented[index].map(patchData => parseTotals3(patchData));
         return acc;
     }, {});
 
@@ -238,64 +339,234 @@ const weaponCompanionsByCategory = (companions) => {
         }).slice(0, 4)
     }
 };
+// if (player.armor) {
+//     const item = player.armor;
+//     const dataItem = data['armor'][item];
+//     dataItem.total['armor'].loadouts++;
+//     dataItem.diffs[difficulty1].loadouts++;
+//     dataItem.missions[getMissionLength(game.mission)].loadouts++;
+//     if (player.level) {
+//         dataItem.totallvl.count++;
+//         dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+//         const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+//         if (dataItem.levels[lvlRounded]) {
+//             dataItem.levels[lvlRounded]++;
+//         } else {
+//             dataItem.levels[lvlRounded] = 1;
+//         }
+//     }
+// }
 
-const parseTotals1 = (games) => {
+
+const parseTotals3 = (games) => {
     let data = getDictObj();
-    const keysArr = ['strategem', 'weapons'];
+    const keysArr = ['strategem', 'weapons', 'armor'];
 
     if (games.length > 0) {
-
         games.forEach((game) => {
 
-            data.total.games++;
-            let difficulty1 = game.difficulty > 6 ? game.difficulty : 7;
+            let difficulty = game.difficulty > 6 ? game.difficulty : 7;
 
-            data.diffs[difficulty1].games++;
-            data.missions[getMissionLength(game.mission)].games++;
-            let uniqueItems = {};
+            keysArr.forEach((key) => {
+                let countGame = false;
+                game.players.forEach((player) => {
+                    if (player) {
+                        if (player[key] !== null && player[key] !== undefined) {
+                            countGame = true;
+                            data.total[key].loadouts++;
+                            data.diffs[key][difficulty].loadouts++;
+                            data.missions[key][getMissionLength(game.mission)].loadouts++;
+
+                            if (player.level) {
+                                data.totallvl[key].count++;
+                                data.totallvl[key].acc = data.totallvl[key].acc + Number(player.level);
+                            }
+
+                            if (key === 'armor') {
+                                const dataItem = data[key][player[key]];
+                                dataItem.total.loadouts++;
+                                dataItem.diffs[difficulty].loadouts++;
+                                dataItem.missions[getMissionLength(game.mission)].loadouts++;
+
+                                if (player.level) {
+                                    dataItem.totallvl.count++;
+                                    dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+
+                                    const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+                                    if (dataItem.levels[lvlRounded]) {
+                                        dataItem.levels[lvlRounded]++;
+                                    } else {
+                                        dataItem.levels[lvlRounded] = 1;
+                                    }
+                                }
+                            } else if (player[key]?.length > 0) {
+
+                                player[key].forEach((item) => {
+                                    if (item !== null) {
+                                        const dataItem = data[key][item];
+                                        dataItem.total.loadouts++;
+                                        dataItem.diffs[difficulty].loadouts++;
+                                        dataItem.missions[getMissionLength(game.mission)].loadouts++;
+
+                                        if (player.level) {
+                                            dataItem.totallvl.count++;
+                                            dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+                                            const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+                                            if (dataItem.levels[lvlRounded]) {
+                                                dataItem.levels[lvlRounded]++;
+                                            } else {
+                                                dataItem.levels[lvlRounded] = 1;
+                                            }
+                                        }
+
+                                        player?.strategem?.forEach((strategem) => {
+                                            if (strategem !== item) {
+                                                if (dataItem.companions.strategem[strategem]) {
+                                                    dataItem.companions.strategem[strategem]++;
+                                                } else {
+                                                    dataItem.companions.strategem[strategem] = 1;
+                                                }
+                                            }
+                                        })
+
+                                        player?.weapons?.forEach((weapon) => {
+                                            if (weapon !== item) {
+                                                if (dataItem.companions.weapons[weapon]) {
+                                                    dataItem.companions.weapons[weapon]++;
+                                                } else {
+                                                    dataItem.companions.weapons[weapon] = 1;
+                                                }
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        }
+                    }
+                })
+
+                if (countGame) {
+                    data.total[key].games++;
+                    data.diffs[key][difficulty].games++;
+                    data.missions[key][getMissionLength(game.mission)].games++;
+
+                    let allItems = game.players.map((player) => {
+                        if (player) {
+                            return player[key]
+                        }
+                    }).flat();
+
+                    const itemsFiltered = allItems.filter((item) => item !== null && item !== undefined);
+                    const uniqueItems = [...new Set(itemsFiltered)];
+                    uniqueItems.forEach((item) => {
+                        const dataItem = data[key][item];
+                        dataItem.total.games++;
+                        dataItem.diffs[difficulty].games++;
+                        dataItem.missions[getMissionLength(game.mission)].games++
+                    })
+
+                }
+            })
+        })
+
+        const strategem = data.strategem;
+        const strategemSort = Object.fromEntries(Object.entries(strategem)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.strategem = strategemSort;
+
+        const weapons = data.weapons;
+        const weaponsSort = Object.fromEntries(Object.entries(weapons)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.weapons = weaponsSort;
+
+        const armor = data.armor;
+        const armorSort = Object.fromEntries(Object.entries(armor)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.armor = armorSort;
+
+        for (const strategemKey in strategem) {
+            const companions = strategem[strategemKey].companions;
+            strategem[strategemKey].companions.strategem = strategemCompanionsByCategory(companions.strategem);
+            strategem[strategemKey].companions.weapons = weaponCompanionsByCategory(companions.weapons);
+        }
+        for (const weaponKey in weapons) {
+            const companions = weapons[weaponKey].companions;
+            weapons[weaponKey].companions.strategem = strategemCompanionsByCategory(companions.strategem);
+            weapons[weaponKey].companions.weapons = weaponCompanionsByCategory(companions.weapons);
+        }
+        return data;
+    }
+    return null;
+}
+
+const parseTotals2 = (games) => {
+    let data = getDictObj();
+    const keysArr = ['strategem', 'weapons', 'armor'];
+
+    if (games.length > 0) {
+        games.forEach((game) => {
+
+            let difficulty = game.difficulty > 6 ? game.difficulty : 7;
+
+            keysArr.forEach((key) => {
+                data.total[key].games++;
+                data.diffs[key][difficulty].games++;
+                data.missions[key][getMissionLength(game.mission)].games++;
+            })
 
             game.players.forEach((player) => {
 
                 if (player !== null) {
-                    data.total.loadouts++;
-                    if (player.level) {
-                        data.totallvl.count++;
-                        data.totallvl.acc = data.totallvl.acc + Number(player.level);
-                    }
 
-                    if(player.armor){
-                        const item = player.armor;
-                        const dataItem = data['armors'][item];
-                        dataItem.total.loadouts++;
-                        dataItem.diffs[difficulty1].loadouts++;
-                        dataItem.missions[getMissionLength(game.mission)].loadouts++;
+                    keysArr.forEach((key) => {
+                        let uniqueItems = {};
+
+                        const loadout = player[key];
+
                         if (player.level) {
-                            dataItem.totallvl.count++;
-                            dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
-                            const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
-                            if (dataItem.levels[lvlRounded]) {
-                                dataItem.levels[lvlRounded]++;
-                            } else {
-                                dataItem.levels[lvlRounded] = 1;
+                            data.totallvl[key].count++;
+                            data.totallvl[key].acc = data.totallvl[key].acc + Number(player.level);
+                        }
+
+                        if (loadout && key === 'armor') {
+                            data.total[key].loadouts++;
+                            data.diffs[key][difficulty].loadouts++;
+                            data.missions[key][getMissionLength(game.mission)].loadouts++;
+
+                            const dataItem = data[key][loadout];
+                            dataItem.total.loadouts++;
+                            dataItem.diffs[difficulty].loadouts++;
+                            dataItem.missions[getMissionLength(game.mission)].loadouts++;
+
+                            if (player.level) {
+                                dataItem.totallvl.count++;
+                                dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+
+                                const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+                                if (dataItem.levels[lvlRounded]) {
+                                    dataItem.levels[lvlRounded]++;
+                                } else {
+                                    dataItem.levels[lvlRounded] = 1;
+                                }
                             }
                         }
-                    }
-                    keysArr.forEach((key) => {
-                        const loadout = player[key];
-                        if (loadout && loadout?.length > 0) {
-                            data.diffs[difficulty1].loadouts++;
-                            data.missions[getMissionLength(game.mission)].loadouts++;
+
+                        else if (loadout && loadout?.length > 0) {
+                            data.total[key].loadouts++;
+                            data.diffs[key][difficulty].loadouts++;
+
+                            data.missions[key][getMissionLength(game.mission)].loadouts++;
 
                             loadout.forEach((item) => {
                                 if (item !== null) {
                                     const dataItem = data[key][item];
                                     dataItem.total.loadouts++;
-                                    dataItem.diffs[difficulty1].loadouts++;
+                                    dataItem.diffs[difficulty].loadouts++;
                                     dataItem.missions[getMissionLength(game.mission)].loadouts++;
 
                                     if (!uniqueItems[item]) {
                                         dataItem.total.games++;
-                                        dataItem.diffs[difficulty1].games++;
+                                        dataItem.diffs[difficulty].games++;
                                         dataItem.missions[getMissionLength(game.mission)].games++;
                                         uniqueItems[item] = 1;
                                     }
@@ -348,10 +619,149 @@ const parseTotals1 = (games) => {
             .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
         data.weapons = weaponsSort;
 
-        const armors = data.armors;
-        const armorsSort = Object.fromEntries(Object.entries(armors)
+        const armor = data.armor;
+        const armorSort = Object.fromEntries(Object.entries(armor)
             .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
-        data.armors = armorsSort;
+        data.armor = armorSort;
+
+        for (const strategemKey in strategem) {
+            const companions = strategem[strategemKey].companions;
+            strategem[strategemKey].companions.strategem = strategemCompanionsByCategory(companions.strategem);
+            strategem[strategemKey].companions.weapons = weaponCompanionsByCategory(companions.weapons);
+        }
+        for (const weaponKey in weapons) {
+            const companions = weapons[weaponKey].companions;
+            weapons[weaponKey].companions.strategem = strategemCompanionsByCategory(companions.strategem);
+            weapons[weaponKey].companions.weapons = weaponCompanionsByCategory(companions.weapons);
+        }
+        return data;
+    }
+    return null;
+}
+
+
+const parseTotals1 = (games) => {
+    let data = getDictObj();
+    const keysArr = ['strategem', 'weapons', 'armor'];
+
+    if (games.length > 0) {
+        games.forEach((game) => {
+
+            let uniqueItems = {};
+            let difficulty = game.difficulty > 6 ? game.difficulty : 7;
+
+            game.players.forEach((player) => {
+
+                if (player !== null) {
+
+                    keysArr.forEach((key) => {
+                        const loadout = player[key];
+
+                        if (player.level) {
+                            data.totallvl[key].count++;
+                            data.totallvl[key].acc = data.totallvl.acc + Number(player.level);
+                        }
+
+
+                        data.total[key].games++;
+                        data.diffs[key][difficulty].games++;
+                        data.missions[key][getMissionLength(game.mission)].games++;
+
+                        if (loadout && key === 'armor') {
+                            data.total[key].loadouts++;
+                            data.diffs[key][difficulty].loadouts++;
+                            data.missions[key][getMissionLength(game.mission)].loadouts++;
+
+                            const dataItem = data[key][loadout];
+                            dataItem.total.loadouts++;
+                            if (player.level) {
+                                dataItem.totallvl.count++;
+                                dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+                                const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+                                if (dataItem.levels[lvlRounded]) {
+                                    dataItem.levels[lvlRounded]++;
+                                } else {
+                                    dataItem.levels[lvlRounded] = 1;
+                                }
+                            }
+                        }
+
+                        else if (loadout && loadout?.length > 0) {
+                            data.total[key].loadouts++;
+                            data.diffs[key][difficulty].loadouts++;
+
+                            if (key === "weapons") {
+                                console.log(game.mission);
+                                console.log(getMissionLength(game.mission));
+                            }
+                            data.missions[key][getMissionLength(game.mission)].loadouts++;
+
+                            loadout.forEach((item) => {
+                                if (item !== null) {
+                                    const dataItem = data[key][item];
+                                    dataItem.total.loadouts++;
+                                    dataItem.diffs[difficulty].loadouts++;
+                                    dataItem.missions[getMissionLength(game.mission)].loadouts++;
+
+                                    if (!uniqueItems[item]) {
+                                        dataItem.total.games++;
+                                        dataItem.diffs[difficulty].games++;
+                                        dataItem.missions[getMissionLength(game.mission)].games++;
+                                        uniqueItems[item] = 1;
+                                    }
+
+                                    if (player.level) {
+                                        dataItem.totallvl.count++;
+                                        dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(player.level);
+                                        const lvlRounded = Math.min(150, Math.ceil(player.level / 50) * 50);
+                                        if (dataItem.levels[lvlRounded]) {
+                                            dataItem.levels[lvlRounded]++;
+                                        } else {
+                                            dataItem.levels[lvlRounded] = 1;
+                                        }
+                                    }
+
+                                    player?.strategem?.forEach((strategem) => {
+                                        if (strategem !== item) {
+                                            if (dataItem.companions.strategem[strategem]) {
+                                                dataItem.companions.strategem[strategem]++;
+                                            } else {
+                                                dataItem.companions.strategem[strategem] = 1;
+                                            }
+                                        }
+                                    })
+
+                                    player?.weapons?.forEach((weapon) => {
+                                        if (weapon !== item) {
+                                            if (dataItem.companions.weapons[weapon]) {
+                                                dataItem.companions.weapons[weapon]++;
+                                            } else {
+                                                dataItem.companions.weapons[weapon] = 1;
+                                            }
+                                        }
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+            });
+        })
+
+        const strategem = data.strategem;
+        const strategemSort = Object.fromEntries(Object.entries(strategem)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.strategem = strategemSort;
+
+        const weapons = data.weapons;
+        const weaponsSort = Object.fromEntries(Object.entries(weapons)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.weapons = weaponsSort;
+
+        const armor = data.armor;
+        const armorSort = Object.fromEntries(Object.entries(armor)
+            .sort(([, a], [, b]) => b.total.loadouts - a.total.loadouts));
+        data.armor = armorSort;
 
         for (const strategemKey in strategem) {
             const companions = strategem[strategemKey].companions;
@@ -382,36 +792,110 @@ const getDictObj = () => {
 
     return {
         total: {
-            loadouts: 0,
-            games: 0
+            strategem: {
+                loadouts: 0,
+                games: 0
+            },
+            weapons: {
+                loadouts: 0,
+                games: 0
+            },
+            armor: {
+                loadouts: 0,
+                games: 0
+            }
         },
         totallvl: {
-            count: 0,
-            acc: 0,
+            strategem: {
+                count: 0,
+                acc: 0,
+            },
+            weapons: {
+                count: 0,
+                acc: 0,
+            },
+            armor: {
+                count: 0,
+                acc: 0,
+            }
         },
         missions: {
-            short: {
-                loadouts: 0,
-                games: 0
+            strategem: {
+                short: {
+                    loadouts: 0,
+                    games: 0
+                },
+                long: {
+                    loadouts: 0,
+                    games: 0
+                },
             },
-            long: {
-                loadouts: 0,
-                games: 0
+            weapons: {
+                short: {
+                    loadouts: 0,
+                    games: 0
+                },
+                long: {
+                    loadouts: 0,
+                    games: 0
+                },
             },
+            armor: {
+                short: {
+                    loadouts: 0,
+                    games: 0
+                },
+                long: {
+                    loadouts: 0,
+                    games: 0
+                },
+            }
         },
         diffs: {
-            10: {
-                loadouts: 0,
-                games: 0
-            }, 9: {
-                loadouts: 0,
-                games: 0
-            }, 8: {
-                loadouts: 0,
-                games: 0
-            }, 7: {
-                loadouts: 0,
-                games: 0
+            strategem: {
+                10: {
+                    loadouts: 0,
+                    games: 0
+                }, 9: {
+                    loadouts: 0,
+                    games: 0
+                }, 8: {
+                    loadouts: 0,
+                    games: 0
+                }, 7: {
+                    loadouts: 0,
+                    games: 0
+                }
+            },
+            weapons: {
+                10: {
+                    loadouts: 0,
+                    games: 0
+                }, 9: {
+                    loadouts: 0,
+                    games: 0
+                }, 8: {
+                    loadouts: 0,
+                    games: 0
+                }, 7: {
+                    loadouts: 0,
+                    games: 0
+                }
+            },
+            armor: {
+                10: {
+                    loadouts: 0,
+                    games: 0
+                }, 9: {
+                    loadouts: 0,
+                    games: 0
+                }, 8: {
+                    loadouts: 0,
+                    games: 0
+                }, 7: {
+                    loadouts: 0,
+                    games: 0
+                }
             }
         },
         strategem: strategemNames.reduce((acc, strategem) => {
@@ -456,10 +940,7 @@ const getDictObj = () => {
                     strategem: {},
                     weapons: {}
                 },
-                modifiers: missionModifiers.reduce((acc, modifier) => {
-                    acc[modifier] = 0;
-                    return acc;
-                }, {})
+
             };
             return acc;
         }, {}),
@@ -505,14 +986,11 @@ const getDictObj = () => {
                     strategem: {},
                     weapons: {}
                 },
-                modifiers: missionModifiers.reduce((acc, modifier) => {
-                    acc[modifier] = 0;
-                    return acc;
-                }, {})
+
             };
             return acc;
         }, {}),
-        armors: armorNames.reduce((acc, armor) => {
+        armor: armorNames.reduce((acc, armor) => {
             acc[armor.toUpperCase()] = {
                 total: {
                     loadouts: 0,
