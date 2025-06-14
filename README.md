@@ -6,6 +6,58 @@
 https://utm7j5pjvi.us-east-1.awsapprunner.com/
 ```
 
+## Usage
+
+Run the project with:
+
+```sh
+npm run
+```
+
+## Endpoints
+
+Base:
+```sh
+http://localhost:8080/
+```
+
+Raw Mongo Data:
+```sh
+/games?faction=terminid&patch=0&difficulty=0&mission=All
+```
+
+```sh
+faction
+Values:
+'terminid'
+'automaton'
+'illuminate'
+```
+
+```sh
+patch
+Values: 0 - 5
+0 - Latest patch
+```
+
+```sh
+difficulty
+Values: 7-10
+0 - All difficulties
+```
+
+```sh
+mission
+Values:
+'All'
+'Short'
+'Long'
+```
+
+Consolidated data for all patches:
+```sh
+http://localhost:8080/report
+```
 ## Installation
 
 Clone the repository and install dependencies:
@@ -29,56 +81,6 @@ To run Redis as a background service, use:
 
 ```sh
 redis-server --service-install
-```
-
-## Usage
-
-Run the project with:
-
-```sh
-npm run
-```
-
-## Endpoints
-
-Base:
-```sh
-http://localhost:8080/
-```
-
-Raw Mongo Data:
-```sh
-/games?faction=terminid&patch=0&difficulty=0&mission=All
-```
-
-```sh
-faction
-'terminid'
-'automaton'
-'illuminate'
-```
-
-```sh
-patch
-0 - latest
-```
-
-```sh
-difficulty
-7-10
-0 - All difficulties
-```
-
-```sh
-mission
-All
-Short
-Long
-```
-
-Consolidated data for all patches:
-```sh
-http://localhost:8080/report
 ```
 
 ## License
