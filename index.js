@@ -117,8 +117,10 @@ app.get('/loadouts', async (req, res) => {
             filterByDateRange(patch.start, patch.end, game.createdAt)))
     )
 
-    const result = factions.reduce((acc, key, index) => {
-        acc[key] = dataSegmented[index].map(patchData => getLoadouts(patchData));
+    const result = factions.reduce((acc, key, index) => {        
+        acc[key] = dataSegmented[index].map((patchData, patchIndex) => {return {
+            patch: patchPeriods[patchIndex].name, 
+            data: getLoadouts(patchData)}});
         return acc;
     }, {});
 
@@ -131,6 +133,8 @@ const getLoadouts = (games) => {
         'strategem': {},
         'weapons': {}
     };
+    
+    let loadoutsCount = 0;
     // const data1 = {
     // }
     // if (games.length > 0) {
@@ -174,7 +178,9 @@ const getLoadouts = (games) => {
                                 const loadout = JSON.stringify(sorted)
                                 if(data[key][loadout]){
                                     data[key][loadout]++;
+                                    loadoutsCount++;
                                 } else{
+                                    loadoutsCount++
                                     data[key][loadout] = 1;
                                 }
                             }
@@ -199,7 +205,7 @@ const getLoadouts = (games) => {
         );
 
 
-        return { strategem, weapons };
+        return { totalLoadouts: loadoutsCount, strategem, weapons };
     }
     return null;
 }
