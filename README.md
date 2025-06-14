@@ -1,5 +1,11 @@
 # Helldive.live Backend
 
+## Public API Link
+
+```sh
+[http://localhost:8080/games
+](https://utm7j5pjvi.us-east-1.awsapprunner.com/)```
+
 ## Installation
 
 Clone the repository and install dependencies:
@@ -42,15 +48,35 @@ http://localhost:8080/
 
 Raw Mongo Data:
 ```sh
-http://localhost:8080/games
+/games?faction=terminid&patch=0&difficulty=0&mission=All
 ```
 
-Consolidated by faction and patch(params optional):
 ```sh
-http://localhost:8080/strategem?diff=${difficulty}&mission=${mission}`
+faction
+'terminid'
+'automaton'
+'illuminate'
 ```
 
-Consolidated, unfiltered:
+```sh
+patch
+0 - latest
+```
+
+```sh
+difficulty
+7-10
+0 - All difficulties
+```
+
+```sh
+mission
+All
+Short
+Long
+```
+
+Consolidated data for all patches:
 ```sh
 http://localhost:8080/report
 ```
