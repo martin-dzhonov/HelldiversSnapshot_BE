@@ -22,7 +22,8 @@ const armorNames = [
     'Acclimated',
     'Integrated Explosives',
     'Reinforced Epaulettes',
-    'Peak Physique'
+    'Peak Physique',
+    'Ballistic Padding'
 ];
 
 const strategemsDict = {
@@ -54,6 +55,7 @@ const strategemsDict = {
     guard_breath: createStrategem("Guard Dog Breath", "AX/TX-13 Guard Dog Breath", "Support"),
     guard_dog: createStrategem("Guard Dog", "AD-334 Guard Dog", "Support"),
     guard_rover: createStrategem("Guard Dog Rover", "AX/LAS-5 Guard Dog Rover", "Support"),
+    guard_arc: createStrategem("Guard Dog Arc", "AX/ARC-3 Guard Dog K-9", "Support"),
     mines_at: createStrategem("Anti-Tank Mines", "MD-17 Anti-Tank Mines", "Defensive"),
     mines_incendiary: createStrategem("Incendiary Mines", "MD-I4 Incendiary Mines", "Defensive"),
     mines_infantry: createStrategem("Anti-Personnel Minefield", "MD-6 Anti-Personnel Minefield", "Defensive"),
@@ -93,6 +95,7 @@ const strategemsDict = {
     sup_sterilizer: createStrategem("Sterilizer", "TX-41 Sterilizer", "Support"),
     sup_wasp: createStrategem("Wasp", "StA-X3 W.A.S.P. Launcher", "Support"),
     flag: createStrategem("One True Flag", "One True Flag", "Support"),
+    sup_deescalator: createStrategem("De-Escalator", "GL-52 De-Escalator", "Support"),
 };
 
 const weaponsDict = {
@@ -159,8 +162,11 @@ const weaponsDict = {
     talon: createStrategem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
     dynamite: createStrategem("Dynamite", "TED-63 Dynamite", "Throwable", 'webp'),
     amendment: createStrategem("Dynamite", "TED-63 Dynamite", "Primary", 'webp'),
-    sabre: createStrategem("Sabre", "TED-63 Dynamite", "Secondary", 'webp'),
-    grenade_pyro: createStrategem("Pyrotech", "TED-63 Dynamite", "Throwable", 'webp'),
+    sabre: createStrategem("Saber", "CQC-2 Saber", "Secondary", 'webp'),
+    grenade_pyro: createStrategem("Pyrotech", "G-142 Pyrotech", "Throwable", 'webp'),
+    pacifier: createStrategem("Pacifier", "AR-32 Pacifier", "Primary", 'webp'),
+    warrant: createStrategem("Warrant", "P-92 Warrant", "Secondary", 'webp'),
+    urchin: createStrategem("Urchin", "G-109 Urchin", "Throwable", 'webp'),
 };
 
 const missionNames = [
@@ -214,12 +220,13 @@ const missionModifiers = [
 ];
 
 const patchPeriods = [
-    { id: 0, name: "Masters Of Ceremony", start: "05/15/2025", end: "Present" },
-    { id: 1, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
-    { id: 2, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
-    { id: 3, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
-    { id: 4, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
-    { id: 5, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
+    { id: 0, name: "Force Of Law", start: "06/12/2025", end: "Present" },
+    { id: 1, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/12/2025" },
+    { id: 2, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
+    { id: 3, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
+    { id: 4, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
+    { id: 5, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+    { id: 6, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
 const factions = ["terminid", "automaton", "illuminate"];
