@@ -221,7 +221,7 @@ const missionModifiers = [
 
 const patchPeriods = [
     { id: 0, name: "Force Of Law", start: "06/12/2025", end: "Present" },
-    { id: 1, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/12/2025" },
+    { id: 1, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/11/2025" },
     { id: 2, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
     { id: 3, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
     { id: 4, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
