@@ -4,6 +4,7 @@ const createStrategem = (baseName, fullName, category) => ({
     category,
 });
 
+const factions = ["terminid", "automaton", "illuminate"];
 
 const armorNames = [
     'Servo-Assisted', 
@@ -30,7 +31,7 @@ const strategemsDict = {
     backpack_ballistic: createStrategem("Ballistic Shield Backpack", "SH-20 Ballistic Shield Backpack", "Support"),
     backpack_jump: createStrategem("Jump Pack", "LIFT-850 Jump Pack", "Support"),
     hover_pack: createStrategem("Hover Pack", "LIFT-860 Hover Pack", "Support"),
-    backpack_shield: createStrategem("Shield Generator Pack", "SH-20 Shield Generator Pack", "Support"),
+    backpack_shield: createStrategem("Shield Generator Pack", "SH-32 Shield Generator Pack", "Support"),
     backpack_shield_directional: createStrategem("Directional Shield", "SH-51 Directional Shield", "Support"),
     backpack_supply: createStrategem("Supply Pack", "B-1 Supply Pack", "Support"),
     backpack_hellbomb: createStrategem("Portable Hellbomb", "B-100 Portable Hellbomb", "Support"),
@@ -115,7 +116,7 @@ const weaponsDict = {
     reprimand: createStrategem("Reprimand", "SMG-32 Reprimand", "Primary", 'webp'),
     defender: createStrategem("Defender", "SMG-37 Defender", "Primary", 'webp'),
     pummeler: createStrategem("Pummeler", "SMG-72 Pummeler", "Primary", 'webp'),
-    punisher: createStrategem("Punisher", "MP-98 Punisher", "Primary", 'webp'),
+    punisher: createStrategem("Punisher", "SG-8 Punisher", "Primary", 'webp'),
     slugger: createStrategem("Slugger", "SG-8S Slugger", "Primary", 'webp'),
     halt: createStrategem("Halt", "SG-20 Halt", "Primary", 'webp'),
     cookout: createStrategem("Cookout", "SG-451 Cookout", "Primary", 'webp'),
@@ -161,7 +162,7 @@ const weaponsDict = {
     deadeye: createStrategem("Deadeye", "R-6 Deadeye", "Primary", 'webp'),
     talon: createStrategem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
     dynamite: createStrategem("Dynamite", "TED-63 Dynamite", "Throwable", 'webp'),
-    amendment: createStrategem("Dynamite", "TED-63 Dynamite", "Primary", 'webp'),
+    amendment: createStrategem("Amendment", "R-2 Amendment", "Primary", 'webp'),
     sabre: createStrategem("Saber", "CQC-2 Saber", "Secondary", 'webp'),
     grenade_pyro: createStrategem("Pyrotech", "G-142 Pyrotech", "Throwable", 'webp'),
     pacifier: createStrategem("Pacifier", "AR-32 Pacifier", "Primary", 'webp'),
@@ -209,16 +210,6 @@ const missionNames = [
     ],
 ];
 
-const missionModifiers = [
-    "Complex Strategem Plotting",
-    "AA Defences",
-    "Orbital Fluctuations",
-    "Gunship Patrols",
-    "Atmospheric Spores",
-    "Roving Shriekers",
-    "Atmospheric Interference"
-];
-
 const patchPeriods = [
     { id: 0, name: "Force Of Law", start: "06/12/2025", end: "Present" },
     { id: 1, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/11/2025" },
@@ -229,7 +220,24 @@ const patchPeriods = [
     { id: 6, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
 ];
 
-const factions = ["terminid", "automaton", "illuminate"];
+// const patchPeriods = [
+//     { id: 0, name: "Classic", start: "04/01/2024", end: "08/06/2024" },
+//     { id: 1, name: "Escalation of Freedom", start: "08/06/2024", end: "12/12/2024" },
+//     { id: 2, name: "Omens of Tyranny", start: "12/12/2024", end: "02/08/2025" },
+//     { id: 3, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
+//     { id: 4, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
+//     { id: 5, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/11/2025" },
+//     { id: 6, name: "Force Of Law", start: "06/12/2025", end: "Present" },
+// ];
 
+// const missionModifiers = [
+//     "Complex Strategem Plotting",
+//     "AA Defences",
+//     "Orbital Fluctuations",
+//     "Gunship Patrols",
+//     "Atmospheric Spores",
+//     "Roving Shriekers",
+//     "Atmospheric Interference"
+// ];
 
-module.exports = { factions, patchPeriods, missionModifiers, missionNames, strategemsDict, weaponsDict, armorNames };
+module.exports = { factions, patchPeriods, missionNames, strategemsDict, weaponsDict, armorNames };
