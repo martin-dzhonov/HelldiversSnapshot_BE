@@ -1,9 +1,8 @@
 
 const express = require('express');
 const dotenv = require('dotenv')
-const { exec } = require("child_process");
-const mongoose = require('mongoose');
-const redis = require('redis');
+dotenv.config();
+const port = process.env.PORT || 8080;
 const {
     patchPeriods,
     strategemsDict,
@@ -16,58 +15,22 @@ const {
     missionList
 } = require('./constants');
 const {
-    parseMissionValues,
-    mergeItemData,
-    extractKeyFromFactions,
-    getItemsByCategory,
     getHistoricalData,
-    parseDiffsValues,
     saveCategoryData,
     computeFactionTotals,
     buildFilter,
-    getMissionsByLength
+    getMissionsByLength,
+    getItemDetails
 } = require('./utils');
+const {
+    GameModel,
+    StrategemModel,
+    WeaponModel,
+    ArmorModel
+} = require('./mongo');
 
-dotenv.config();
 const app = express();
 app.use(express.json());
-const port = process.env.PORT || 8080;
-const mKey = encodeURIComponent('Crtstr#21')
-mongoose.connect(`mongodb+srv://martindzhonov:${mKey}@serverlessinstance0.hrhcm0l.mongodb.net/hd`)
-
-const gameSchema = new mongoose.Schema({
-    id: { type: Number, unique: true },
-    faction: String,
-    planet: String,
-    difficulty: Number,
-    mission: String,
-    createdAt: Date,
-    players: [
-        {
-            strategem: [String],
-            weapons: [String],
-            armor: String,
-            level: String
-        }
-    ],
-    modifiers: [],
-});
-
-const totalsSchema = new mongoose.Schema({
-    filter: {
-        patch: Number,
-        difficulty: Number,
-        mission: String
-    },
-    terminid: {},
-    automaton: {},
-    illuminate: {}
-});
-
-const GameModel = mongoose.model("matches", gameSchema);
-const StrategemModel = mongoose.model("strategem", totalsSchema);
-const WeaponModel = mongoose.model("weapon", totalsSchema);
-const ArmorModel = mongoose.model("armor", totalsSchema);
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -158,33 +121,6 @@ app.get('/weapon_details', withTiming(async (req, res) => {
     return res.send(result);
 }));
 
-app.get('/generate_reports', async (req, res) => {
-    const startTime = Date.now();
-    const models = [StrategemModel, WeaponModel, ArmorModel];
-    await Promise.all(models.map(model => model.deleteMany({})));
-
-    for (const patchPeriod of patchPeriods) {
-        for (const difficulty of difficultyList) {
-            for (const mission of missionList) {
-                const timeStart = Date.now();
-                const filter = buildFilter(patchPeriod, difficulty, mission);
-                const mongoData = await GameModel.find(filter);
-                const totals = computeFactionTotals(mongoData);
-
-                await Promise.all(
-                    models.map((model, i) =>
-                        saveCategoryData(model, totals, patchPeriod.id, difficulty, mission, categories[i])));
-
-                const timeEnd = Date.now();
-                console.log(`Finished Patch ${patchPeriod.id}, Difficulty ${difficulty}, Mission ${mission} in ${timeEnd - timeStart} ms`);
-            }
-        }
-    }
-
-    console.log(`Total execution time: ${Date.now() - startTime} ms`);
-    return res.send("Success");
-});
-
 app.get('/games', withTiming(async (req, res) => {
     const { faction, patch, difficulty, mission } = req.query;
     const validMissions = getMissionsByLength(mission);
@@ -205,25 +141,28 @@ app.get('/games', withTiming(async (req, res) => {
     res.send(mongoData);
 }));
 
-async function getItemDetails({ id, patch_id, model, dict, categories }) {
-    const patchesData = await model.find({
-        'filter.difficulty': 0,
-        'filter.mission': "All",
-    });
+app.get('/generate_reports', async (req, res) => {
+    const startTime = Date.now();
+    const models = [StrategemModel, WeaponModel, ArmorModel];
+    await Promise.all(models.map(model => model.deleteMany({})));
 
-    const patchData = patchesData[patch_id];
-    const historicalData = getHistoricalData(patchesData, Object.keys(dict));
-    const itemPatchData = extractKeyFromFactions(patchData, id);
-    const itemHistory = extractKeyFromFactions(historicalData, id);
+    for (const patchPeriod of patchPeriods) {
+        for (const difficulty of difficultyList) {
+            for (const mission of missionList) {
+                const timeStart = Date.now();
+                const filter = buildFilter(patchPeriod, difficulty, mission);
+                const mongoData = await GameModel.find(filter);
+                const totals = computeFactionTotals(mongoData);
 
-    const ranks = { all: Object.keys(dict).length };
-    for (const category of categories) {
-        ranks[category] = Object.keys(getItemsByCategory(dict, category)).length;
+                await Promise.all(
+                    models.map((model, i) =>
+                        saveCategoryData(model, totals, patchPeriod.id, difficulty, mission, categories[i])));
+
+                console.log(`Finished Patch ${patchPeriod.id}, Difficulty ${difficulty}, Mission ${mission} in ${ Date.now() - timeStart} ms`);
+            }
+        }
     }
 
-    const result = mergeItemData(itemPatchData, itemHistory, ranks);
-    parseDiffsValues(result, patchData);
-    parseMissionValues(result, patchData);
-
-    return result;
-}
+    console.log(`Total execution time: ${Date.now() - startTime} ms`);
+    return res.send("Success");
+});

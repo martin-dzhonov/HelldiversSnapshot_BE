@@ -5,7 +5,9 @@ const {
     weaponsDict,
     itemsDict,
     armorNames,
-    categories,
+    categories, 
+    getHistoryDict, 
+    getTotalsDict
 } = require('./constants');
 
 const getPercentage = (number1, number2, decimals = 1) => {
@@ -14,6 +16,71 @@ const getPercentage = (number1, number2, decimals = 1) => {
     if (raw === 0) return 0;
     if (raw > 0.01 && raw < 0.1) return Number(raw.toFixed(2));
     return Number(raw.toFixed(decimals));
+};
+
+function buildFilter(patchPeriod, difficulty, mission) {
+    return {
+        ...(difficulty !== 0 && { difficulty }),
+        ...(mission && { mission: { $in: getMissionsByLength(mission) } }),
+        createdAt: {
+            $gte: new Date(patchPeriod.start),
+            $lte: patchPeriod.end.toLowerCase() === 'present' ?
+                new Date() :
+                new Date(patchPeriod.end),
+        },
+    };
+}
+
+function mergeItemData(itemPatchData, itemHistory, ranks) {
+    const result = {};
+    for (const faction of new Set([...Object.keys(itemHistory), ...Object.keys(itemPatchData)])) {
+        result[faction] = {
+            ...itemPatchData[faction],
+            ...itemHistory[faction],
+            ranks
+        };
+    }
+    return result;
+}
+
+function extractKeyFromFactions(obj, targetKey) {
+    const result = {};
+    for (const faction in obj) {
+        const factionData = obj[faction];
+        const itemsData = factionData?.items;
+        if (itemsData && itemsData[targetKey]) {
+            result[faction] = itemsData[targetKey];
+        }
+    }
+
+    return result;
+}
+
+const getHistoricalData = (data, dictNames) => {
+    const result = getHistoryDict(dictNames);
+    for (let i = 0; i < data.length; i++) {
+        const patchData = data[i];
+        for (const faction of factions) {
+            const factionData = patchData[faction];
+            const factionResult = result[faction];
+            factionResult.totals.unshift(factionData.total);
+
+            const itemsData = factionData.items;
+            const itemsResult = factionResult.items;
+
+            for (const [key, value] of Object.entries(itemsData)) {
+                const item = itemsResult[key];
+                const values = item.values;
+                const isNew = values.length > 0 && values.every(item => item.loadouts < 0);
+                item.values.unshift({
+                    ...value.values,
+                    ...(isNew && { isNew })
+                });
+            }
+        }
+    }
+
+    return result;
 };
 
 const strategemCompanionsByCategory = (companions) => {
@@ -66,42 +133,6 @@ function parseMissionValues(itemData, patchData) {
     })
 }
 
-function mergeItemData(itemPatchData, itemHistory, ranks) {
-    const result = {};
-    for (const faction of new Set([...Object.keys(itemHistory), ...Object.keys(itemPatchData)])) {
-        result[faction] = {
-            ...itemPatchData[faction],
-            ...itemHistory[faction],
-            ranks
-        };
-    }
-    return result;
-}
-
-function extractKeyFromFactions(obj, targetKey) {
-    const result = {};
-    for (const faction in obj) {
-        const factionData = obj[faction];
-        const itemsData = factionData?.items;
-        if (itemsData && itemsData[targetKey]) {
-            result[faction] = itemsData[targetKey];
-        }
-    }
-
-    return result;
-}
-
-function buildFilter(patchPeriod, difficulty, mission) {
-    return {
-        ...(difficulty !== 0 && { difficulty }),
-        ...(mission && { mission: { $in: getMissionsByLength(mission) } }),
-        createdAt: {
-            $gte: new Date(patchPeriod.start),
-            $lte: patchPeriod.end.toLowerCase() === 'present' ? new Date() : new Date(patchPeriod.end),
-        },
-    };
-}
-
 function computeFactionTotals(mongoData) {
     const dataSegmented = factions.map(f => mongoData.filter(game => game.faction === f));
     return factions.reduce((acc, f, i) => {
@@ -129,33 +160,6 @@ function parseDiffsValues(itemData, patchData) {
     })
 }
 
-const getHistoricalData = (data, dictNames) => {
-    const result = getHistoryDict(dictNames);
-    for (let i = 0; i < data.length; i++) {
-        const patchData = data[i];
-        for (const faction of factions) {
-            const factionData = patchData[faction];
-            const factionResult = result[faction];
-            factionResult.totals.unshift(factionData.total);
-
-            const itemsData = factionData.items;
-            const itemsResult = factionResult.items;
-
-            for (const [key, value] of Object.entries(itemsData)) {
-                const item = itemsResult[key];
-                const values = item.values;
-                const isNew = values.length > 0 && values.every(item => item.loadouts < 0);
-                item.values.unshift({
-                    ...value.values,
-                    ...(isNew && { isNew })
-                });
-            }
-        }
-    }
-
-    return result;
-};
-
 function totalsByCategory(totals, category) {
     const result = { filter: totals.filter };
 
@@ -174,7 +178,7 @@ function totalsByCategory(totals, category) {
 }
 
 const parseTotals = (games) => {
-    let data = getDictObj();
+    let data = getTotalsDict();
 
     games.forEach((game) => {
         let difficulty = game.difficulty > 6 ? game.difficulty : 7;
@@ -346,260 +350,36 @@ const getItemsByCategory = (data, category) => {
     return filtered;
 }
 
-const getHistoryDict = (itemNames) => {
-    const result = {};
-    const createEntries = (names) =>
-        names.reduce((acc, name) => {
-            acc[name] = { values: [] };
-            return acc;
-        }, {});
-
-    factions.forEach(faction => {
-        result[faction] = {
-            totals: [],
-            items: createEntries(itemNames),
-        };
+async function getItemDetails({ id, patch_id, model, dict, categories }) {
+    const patchesData = await model.find({
+        'filter.difficulty': 0,
+        'filter.mission': "All",
     });
 
+    const patchData = patchesData[patch_id];
+    const historicalData = getHistoricalData(patchesData, Object.keys(dict));
+    const itemPatchData = extractKeyFromFactions(patchData, id);
+    const itemHistory = extractKeyFromFactions(historicalData, id);
+
+    const ranks = { all: Object.keys(dict).length };
+    for (const category of categories) {
+        ranks[category] = Object.keys(getItemsByCategory(dict, category)).length;
+    }
+
+    const result = mergeItemData(itemPatchData, itemHistory, ranks);
+    parseDiffsValues(result, patchData);
+    parseMissionValues(result, patchData);
+
     return result;
-};
-
-
-const getDictObj = () => {
-    const strategemNames = Object.keys(strategemsDict);
-    const weaponNames = Object.keys(weaponsDict);
-
-    return {
-        total: {
-            strategem: {
-                loadouts: 0,
-                games: 0,
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-            },
-            weapons: {
-                loadouts: 0,
-                games: 0,
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-            },
-            armor: {
-                loadouts: 0,
-                games: 0,
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-            }
-        },
-        strategem: strategemNames.reduce((acc, strategem) => {
-            acc[strategem] = {
-                total: {
-                    loadouts: 0,
-                    games: 0
-                },
-                totallvl: {
-                    count: 0,
-                    acc: 0,
-                },
-                levels: {
-                },
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-                companions:
-                {
-                    strategem: {},
-                    weapons: {}
-                },
-
-            };
-            return acc;
-        }, {}),
-        weapons: weaponNames.reduce((acc, weapon) => {
-            acc[weapon] = {
-                total: {
-                    loadouts: 0,
-                    games: 0
-                },
-                totallvl: {
-                    count: 0,
-                    acc: 0,
-                },
-                levels: {
-                },
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-                companions:
-                {
-                    strategem: {},
-                    weapons: {}
-                },
-
-            };
-            return acc;
-        }, {}),
-        armor: armorNames.reduce((acc, armor) => {
-            acc[armor.toUpperCase()] = {
-                total: {
-                    loadouts: 0,
-                    games: 0
-                },
-                totallvl: {
-                    count: 0,
-                    acc: 0,
-                },
-                levels: {
-                },
-                missions: {
-                    short: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                    long: {
-                        loadouts: 0,
-                        games: 0
-                    },
-                },
-                diffs: {
-                    10: {
-                        loadouts: 0,
-                        games: 0
-                    }, 9: {
-                        loadouts: 0,
-                        games: 0
-                    }, 8: {
-                        loadouts: 0,
-                        games: 0
-                    }, 7: {
-                        loadouts: 0,
-                        games: 0
-                    }
-                },
-            };
-            return acc;
-        }, {}),
-    };
 }
+
 
 module.exports = {
     parseMissionValues,
     mergeItemData,
     extractKeyFromFactions,
     getPercentage,
-    getDictObj,
+    getTotalsDict,
     getHistoryDict,
     getItemsByCategory,
     getItemRank,
@@ -614,5 +394,6 @@ module.exports = {
     saveCategoryData,
     computeFactionTotals,
     buildFilter,
-    getMissionsByLength
+    getMissionsByLength,
+    getItemDetails
 };
