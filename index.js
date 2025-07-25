@@ -145,7 +145,6 @@ app.get('/generate_reports', async (req, res) => {
     const startTime = Date.now();
     const models = [StrategemModel, WeaponModel, ArmorModel];
     await Promise.all(models.map(model => model.deleteMany({})));
-
     for (const patchPeriod of patchPeriods) {
         for (const difficulty of difficultyList) {
             for (const mission of missionList) {

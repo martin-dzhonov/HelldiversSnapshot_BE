@@ -12,7 +12,8 @@ const patchPeriods = [
     { id: 3, name: "Servants of Freedom", start: "02/08/2025", end: "03/19/2025" },
     { id: 4, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
     { id: 5, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/12/2025" },
-    { id: 6, name: "Force Of Law", start: "06/12/2025", end: "Present" },
+    { id: 6, name: "Force Of Law", start: "06/12/2025", end: "07/17/2025" },
+    { id: 7, name: "Control Group", start: "07/17/2025", end: "Present" },
 ];
 
 const armorNames = [
@@ -33,7 +34,8 @@ const armorNames = [
     'Integrated Explosives',
     'Reinforced Epaulettes',
     'Peak Physique',
-    'Ballistic Padding'
+    'Ballistic Padding',
+    'Adreno-Defibrillator'
 ];
 
 const missionNames = [
@@ -154,6 +156,9 @@ const strategemsDict = {
     sup_wasp: createItem("Wasp", "StA-X3 W.A.S.P. Launcher", "Support"),
     flag: createItem("One True Flag", "One True Flag", "Support"),
     sup_deescalator: createItem("De-Escalator", "GL-52 De-Escalator", "Support"),
+    sup_epoch: createItem("Epoch", "PLAS-45 Epoch", "Support"),
+    backpack_warp: createItem("Warp Pack", "LIFT-182 Warp Pack", "Support"),
+    sentry_laser: createItem("Laser Sentry", "A/LAS-98 Laser Sentry", "Defensive"),
 };
 
 const weaponsDict = {
@@ -225,6 +230,8 @@ const weaponsDict = {
     pacifier: createItem("Pacifier", "AR-32 Pacifier", "Primary", 'webp'),
     warrant: createItem("Warrant", "P-92 Warrant", "Secondary", 'webp'),
     urchin: createItem("Urchin", "G-109 Urchin", "Throwable", 'webp'),
+    variable: createItem("Variable", "VG-70 Variable", "Primary", 'webp'),
+    grenade_arc: createItem("Arc", "G-31 Arc", "Throwable", 'webp'),
 };
 
 const itemsDict = { ...strategemsDict, ...weaponsDict };
