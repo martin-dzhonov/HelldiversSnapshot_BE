@@ -1,7 +1,7 @@
 
-const express = require('express');
 const dotenv = require('dotenv')
 dotenv.config();
+const express = require('express');
 const port = process.env.PORT || 8080;
 const {
     patchPeriods,
@@ -19,8 +19,8 @@ const {
     saveCategoryData,
     computeFactionTotals,
     buildFilter,
-    getMissionsByLength,
-    getItemDetails
+    getItemDetails,
+    buildGamesFilter
 } = require('./utils');
 const {
     GameModel,
@@ -29,14 +29,16 @@ const {
     ArmorModel
 } = require('./mongo');
 
+const NodeCache = require('node-cache');
+const historyCache = new NodeCache({ stdTTL: 300, checkperiod: 60 }); 
+
 const app = express();
 app.use(express.json());
 
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
 
@@ -52,46 +54,43 @@ const withTiming = (handler) => async (req, res, next) => {
     const start = Date.now();
     try {
         await handler(req, res, next);
+    } catch (err) {
+        next(err);
     } finally {
-        console.log(`${req.route.path} took ${Date.now() - start}ms`);
+        console.log(`${req.route?.path || req.originalUrl} took ${Date.now() - start}ms`);
     }
 };
 
-app.get('/history_strategem', withTiming(async (req, res) => {
+const historyHandler = (model, keys, prefix) => withTiming(async (req, res) => {
     const { difficulty, mission } = req.query;
+    const cacheKey = `${prefix}:${difficulty}:${mission}`;
 
-    const mongoData = await StrategemModel.find({
+    const cached = historyCache.get(cacheKey);
+    if (cached) {
+        return res.send(cached);
+    }
+
+    const mongoData = await model.find({
         'filter.difficulty': difficulty,
         'filter.mission': mission,
     });
 
-    const result = getHistoricalData(mongoData, Object.keys(strategemsDict));
-    return res.send(result);
-}));
+    const result = getHistoricalData(mongoData, keys);
+    historyCache.set(cacheKey, result);
+    res.send(result);
+});
 
-app.get('/history_weapons', withTiming(async (req, res) => {
-    const { difficulty, mission } = req.query;
+app.get('/history_strategem',
+    historyHandler(StrategemModel, Object.keys(strategemsDict), 'strategem')
+);
 
-    const mongoData = await WeaponModel.find({
-        'filter.difficulty': difficulty,
-        'filter.mission': mission,
-    });
+app.get('/history_weapons',
+    historyHandler(WeaponModel, Object.keys(weaponsDict), 'weapon')
+);
 
-    const result = getHistoricalData(mongoData, Object.keys(weaponsDict));
-    return res.send(result);
-}));
-
-app.get('/history_armor', withTiming(async (req, res) => {
-    const { difficulty, mission } = req.query;
-
-    const mongoData = await ArmorModel.find({
-        'filter.difficulty': difficulty,
-        'filter.mission': mission,
-    });
-
-    const result = getHistoricalData(mongoData, armorNames.map(name => name.toUpperCase()));
-    return res.send(result);
-}));
+app.get('/history_armor',
+    historyHandler(ArmorModel, armorNames.map(n => n.toUpperCase()), 'armor')
+);
 
 app.get('/strategem_details', withTiming(async (req, res) => {
     const { id, patch_id } = req.query;
@@ -123,22 +122,12 @@ app.get('/weapon_details', withTiming(async (req, res) => {
 
 app.get('/games', withTiming(async (req, res) => {
     const { faction, patch, difficulty, mission } = req.query;
-    const validMissions = getMissionsByLength(mission);
     const patchPeriod = patchPeriods.find((item) => item.id === Number(patch));
 
-    const filter = {
-        faction: faction,
-        ...((difficulty && difficulty !== "0") && { difficulty: Number(difficulty) }),
-        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-        createdAt: {
-            $gte: new Date(patchPeriod.start),
-            $lte: patchPeriod.end.toLowerCase() === 'present' ? new Date() : new Date(patchPeriod.end)
-        }
-    };
-
+    const filter = buildGamesFilter(faction, patchPeriod, difficulty, mission);
     const mongoData = await GameModel.find(filter)
 
-    res.send(mongoData);
+    return res.send(mongoData);
 }));
 
 app.get('/generate_reports', async (req, res) => {
@@ -164,4 +153,12 @@ app.get('/generate_reports', async (req, res) => {
 
     console.log(`Total execution time: ${Date.now() - startTime} ms`);
     return res.send("Success");
+});
+
+app.use((err, req, res, next) => {
+    console.error('Unhandled Error:', err);
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: err.message,
+    });
 });

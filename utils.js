@@ -4,7 +4,6 @@ const {
     strategemsDict,
     weaponsDict,
     itemsDict,
-    armorNames,
     categories, 
     getHistoryDict, 
     getTotalsDict
@@ -28,6 +27,21 @@ function buildFilter(patchPeriod, difficulty, mission) {
                 new Date() :
                 new Date(patchPeriod.end),
         },
+    };
+}
+
+
+function buildGamesFilter(faction, patchPeriod, difficulty, mission) {
+    const validMissions = getMissionsByLength(mission);
+
+    return {
+        faction: faction,
+        ...((difficulty && difficulty !== "0") && { difficulty: Number(difficulty) }),
+        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
+        createdAt: {
+            $gte: new Date(patchPeriod.start),
+            $lte: patchPeriod.end.toLowerCase() === 'present' ? new Date() : new Date(patchPeriod.end)
+        }
     };
 }
 
@@ -394,6 +408,7 @@ module.exports = {
     saveCategoryData,
     computeFactionTotals,
     buildFilter,
+    buildGamesFilter,
     getMissionsByLength,
     getItemDetails
 };
