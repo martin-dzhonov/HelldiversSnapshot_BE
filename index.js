@@ -30,7 +30,7 @@ const {
 } = require('./mongo');
 
 const NodeCache = require('node-cache');
-const historyCache = new NodeCache({ stdTTL: 300, checkperiod: 60 }); 
+const historyCache = new NodeCache({ stdTTL: 2500, checkperiod: 60 }); 
 
 const app = express();
 app.use(express.json());
@@ -63,22 +63,23 @@ const withTiming = (handler) => async (req, res, next) => {
 
 const historyHandler = (model, keys, prefix) => withTiming(async (req, res) => {
     const { difficulty, mission } = req.query;
+  
+    if (!difficulty || !mission) { return res.status(400).send({ error: 'Missing parameters' });}
+  
     const cacheKey = `${prefix}:${difficulty}:${mission}`;
-
     const cached = historyCache.get(cacheKey);
-    if (cached) {
-        return res.send(cached);
-    }
-
+    if (cached) { return res.send(cached) }
+  
     const mongoData = await model.find({
-        'filter.difficulty': difficulty,
-        'filter.mission': mission,
+      'filter.difficulty': difficulty,
+      'filter.mission': mission,
     });
-
+  
     const result = getHistoricalData(mongoData, keys);
     historyCache.set(cacheKey, result);
+
     res.send(result);
-});
+  });
 
 app.get('/history_strategem',
     historyHandler(StrategemModel, Object.keys(strategemsDict), 'strategem')
@@ -151,9 +152,15 @@ app.get('/generate_reports', async (req, res) => {
         }
     }
 
+    historyCache.flushAll();
     console.log(`Total execution time: ${Date.now() - startTime} ms`);
     return res.send("Success");
 });
+
+app.post('/cache_flush', (req, res) => {
+    historyCache.flushAll();
+    res.send({ message: 'Cache flushed successfully' });
+  });
 
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
