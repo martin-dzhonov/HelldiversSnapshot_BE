@@ -65,7 +65,8 @@ const missionNames = [
         "TAKE DOWN OVERSHIP",
         "EVACUATE CITIZENS",
         "RESTORE AIR QUALITY",
-        "SABOTAGE SUPPLY BASES"
+        "SABOTAGE SUPPLY BASES",
+        "CLEANSE INFESTED DISTRICT"
     ],
     [
         "ERADICATE TERMINID SWARM",

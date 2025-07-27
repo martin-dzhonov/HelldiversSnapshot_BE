@@ -30,7 +30,7 @@ const {
 } = require('./mongo');
 
 const NodeCache = require('node-cache');
-const historyCache = new NodeCache({ stdTTL: 2500, checkperiod: 60 }); 
+const historyCache = new NodeCache({ stdTTL: 40000, checkperiod: 60 }); 
 
 const app = express();
 app.use(express.json());
@@ -96,7 +96,7 @@ app.get('/history_armor',
 app.get('/strategem_details', withTiming(async (req, res) => {
     const { id, patch_id } = req.query;
 
-    const result = await getItemDetails({
+    const result = await getItemDetails({ 
         id,
         patch_id,
         model: StrategemModel,
