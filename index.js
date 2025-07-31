@@ -157,7 +157,7 @@ app.get('/generate_reports', async (req, res) => {
     return res.send("Success");
 });
 
-app.post('/cache_flush', (req, res) => {
+app.get('/cache_flush', (req, res) => {
     historyCache.flushAll();
     res.send({ message: 'Cache flushed successfully' });
   });
