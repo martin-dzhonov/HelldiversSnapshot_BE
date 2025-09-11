@@ -13,7 +13,8 @@ const patchPeriods = [
     { id: 4, name: "Borderline Justice", start: "03/19/2025", end: "05/15/2025" },
     { id: 5, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/12/2025" },
     { id: 6, name: "Force Of Law", start: "06/12/2025", end: "07/17/2025" },
-    { id: 7, name: "Control Group", start: "07/17/2025", end: "Present" },
+    { id: 7, name: "Control Group", start: "07/17/2025", end: "09/03/2025" },
+    { id: 8, name: "Into the Unjust", start: "09/04/2025", end: "Present" },
 ];
 
 const armorNames = [
@@ -35,7 +36,9 @@ const armorNames = [
     'Reinforced Epaulettes',
     'Peak Physique',
     'Ballistic Padding',
-    'Adreno-Defibrillator'
+    'Adreno-Defibrillator',
+    'Feet First',
+    'Desert Stormer'
 ];
 
 const missionNames = [
@@ -66,7 +69,11 @@ const missionNames = [
         "EVACUATE CITIZENS",
         "RESTORE AIR QUALITY",
         "SABOTAGE SUPPLY BASES",
-        "CLEANSE INFESTED DISTRICT"
+        "CLEANSE INFESTED DISTRICT",
+        "DESTROY SPORE LUNG",
+        "EXTRACT E-711",
+        "CONDUCT MOBILE E-711 EXTRACTION",
+        "RESTART PUMPS"
     ],
     [
         "ERADICATE TERMINID SWARM",
@@ -160,6 +167,10 @@ const strategemsDict = {
     sup_epoch: createItem("Epoch", "PLAS-45 Epoch", "Support"),
     backpack_warp: createItem("Warp Pack", "LIFT-182 Warp Pack", "Support"),
     sentry_laser: createItem("Laser Sentry", "A/LAS-98 Laser Sentry", "Defensive"),
+
+    sup_speargun: createItem("Speargun", "One True Flag", "Support"),
+    sup_eat_700: createItem("Expendable Napalm", "One True Flag", "Support"),
+    sup_solo_silo: createItem("Solo Silo", "One True Flag", "Support"),
 };
 
 const weaponsDict = {
@@ -169,7 +180,7 @@ const weaponsDict = {
     liberator_car: createItem("Liberator Carabine", "AR-23A Liberator Carabine", "Primary", 'webp'),
     sta_52: createItem("StA-52", "StA-52 Assault Rifle", "Primary", 'webp'),
     tenderizer: createItem("Tenderizer", "AR-61 Tenderizer", "Primary", 'webp'),
-    adjucator: createItem("Adjucator", "BR-14 Adjucator", "Primary", 'webp'),
+    adjucator: createItem("Adjudicator", "BR-14 Adjudicator", "Primary", 'webp'),
     constitution: createItem("Constitution", "R-2124 Constitution", "Primary", 'webp'),
     diligence: createItem("Diligence", "R-63 Diligence", "Primary", 'webp'),
     diligence_cs: createItem("Diligence Counter Sniper", "R-63CS Diligence Counter Sniper", "Primary", 'webp'),
@@ -197,10 +208,22 @@ const weaponsDict = {
     purifier: createItem("Purifier", "PLAS-101 Purifier", "Primary", 'webp'),
     torcher: createItem("Torcher", "FLAM-66 Torcher", "Primary", 'webp'),
     dominator: createItem("Dominator", "JAR-5 Dominator", "Primary", 'webp'),
+    deadeye: createItem("Deadeye", "R-6 Deadeye", "Primary", 'webp'),
+    amendment: createItem("Amendment", "R-2 Amendment", "Primary", 'webp'),
+    pacifier: createItem("Pacifier", "AR-32 Pacifier", "Primary", 'webp'),
+    variable: createItem("Variable", "VG-70 Variable", "Primary", 'webp'),
+    coyote: createItem("Coyote", "VG-70 Variable", "Primary", 'webp'),
+    m7s: createItem("M7S", "VG-70 Variable", "Primary", 'webp'),
+    m90a: createItem("M90A", "VG-70 Variable", "Primary", 'webp'),
+    ma5c: createItem("MA5C", "VG-70 Variable", "Primary", 'webp'),
+
     peacemaker: createItem("Peacemaker", "P-2 Peacemaker", "Secondary", 'webp'),
     redeemer: createItem("Redeemer", "P-19 Redeemer", "Secondary", 'webp'),
     verdict: createItem("Verdict", "P-113 Verdict", "Secondary", 'webp'),
     senator: createItem("Senator", "P-4 Senator", "Secondary", 'webp'),
+    talon: createItem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
+    warrant: createItem("Warrant", "P-92 Warrant", "Secondary", 'webp'),
+    sabre: createItem("Saber", "CQC-2 Saber", "Secondary", 'webp'),
     shock_lance: createItem("Stun Lance", "CQC-19 Stun Lance", "Secondary", 'webp'),
     shock_batton: createItem("Stun Batton", "CQC-30 Stun Baton", "Secondary", 'webp'),
     axe: createItem("Combat Hatchet", "CQC-5 Combat Hatchet", "Secondary", 'webp'),
@@ -211,6 +234,9 @@ const weaponsDict = {
     laser_pistol: createItem("Dagger", "LAS-7 Dagger", "Secondary", 'webp'),
     ultimatum: createItem("Ultimatum", "GP-31 Ultimatum", "Secondary", 'webp'),
     loyalist: createItem("Loyalist", "PLAS-15 Loyalist", "Secondary", 'webp'),
+    m6c: createItem("M6C", "PLAS-15 Loyalist", "Secondary", 'webp'),
+    machete: createItem("Machete", "PLAS-15 Loyalist", "Secondary", 'webp'),
+
     grenade_frag: createItem("Frag", "G-6 Frag", "Throwable", 'webp'),
     grenade_he: createItem("High Explosive", "G-12 High Explosive", "Throwable", 'webp'),
     grenade_inc: createItem("Incendiary", "G-10 Incendiary", "Throwable", 'webp'),
@@ -222,18 +248,12 @@ const weaponsDict = {
     grenade_smoke: createItem("Smoke", "G-3 Smoke", "Throwable", 'webp'),
     grenade_termite: createItem("Thermite", "G-123 Thermite", "Throwable", 'webp'),
     throwing_knife: createItem("Throwing Knife", "K-2 Throwing Knife", "Throwable", 'webp'),
-    deadeye: createItem("Deadeye", "R-6 Deadeye", "Primary", 'webp'),
-    talon: createItem("Talon", "LAS-58 Talon", "Secondary", 'webp'),
     dynamite: createItem("Dynamite", "TED-63 Dynamite", "Throwable", 'webp'),
-    amendment: createItem("Amendment", "R-2 Amendment", "Primary", 'webp'),
-    sabre: createItem("Saber", "CQC-2 Saber", "Secondary", 'webp'),
     grenade_pyro: createItem("Pyrotech", "G-142 Pyrotech", "Throwable", 'webp'),
-    pacifier: createItem("Pacifier", "AR-32 Pacifier", "Primary", 'webp'),
-    warrant: createItem("Warrant", "P-92 Warrant", "Secondary", 'webp'),
     urchin: createItem("Urchin", "G-109 Urchin", "Throwable", 'webp'),
-    variable: createItem("Variable", "VG-70 Variable", "Primary", 'webp'),
     grenade_arc: createItem("Arc", "G-31 Arc", "Throwable", 'webp'),
-};
+    pineapple: createItem("pineapple", "pineapple", "Throwable", 'webp'),
+};;
 
 const itemsDict = { ...strategemsDict, ...weaponsDict };
 

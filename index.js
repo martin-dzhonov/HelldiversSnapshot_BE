@@ -20,7 +20,8 @@ const {
     computeFactionTotals,
     buildFilter,
     getItemDetails,
-    buildGamesFilter
+    buildGamesFilter,
+    getDistributions
 } = require('./utils');
 const {
     GameModel,
@@ -128,13 +129,16 @@ app.get('/games', withTiming(async (req, res) => {
     const filter = buildGamesFilter(faction, patchPeriod, difficulty, mission);
     const mongoData = await GameModel.find(filter)
 
-    return res.send(mongoData);
+    const distributions = getDistributions(mongoData);
+
+    return res.send({games: mongoData, distributions});
 }));
 
 app.get('/generate_reports', async (req, res) => {
     const startTime = Date.now();
     const models = [StrategemModel, WeaponModel, ArmorModel];
     await Promise.all(models.map(model => model.deleteMany({})));
+    
     for (const patchPeriod of patchPeriods) {
         for (const difficulty of difficultyList) {
             for (const mission of missionList) {
@@ -169,3 +173,13 @@ app.use((err, req, res, next) => {
         message: err.message,
     });
 });
+
+// app.get('/games', withTiming(async (req, res) => {
+//     const { faction, patch, difficulty, mission } = req.query;
+//     const patchPeriod = patchPeriods.find((item) => item.id === Number(patch));
+
+//     const filter = buildGamesFilter(faction, patchPeriod, difficulty, mission);
+//     const mongoData = await GameModel.find(filter)
+
+//     return res.send(mongoData);
+// }));

@@ -9,6 +9,46 @@ const {
     getTotalsDict
 } = require('./constants');
 
+
+const getDistributions = (data)=>{
+    const result = {
+        level: {},
+        difficulty: {},
+        mission: {}
+    }
+
+    data.forEach((game) => {
+        let difficulty = game.difficulty > 6 ? game.difficulty : 7;
+        let missionLen = getMissionLength(game.mission)
+
+        if(result.difficulty[difficulty]){
+            result.difficulty[difficulty]++
+        } else{
+            result.difficulty[difficulty] = 1;
+        }
+
+        if(result.mission[missionLen]){
+            result.mission[missionLen]++
+        } else{
+            result.mission[missionLen] = 1;
+        }
+
+        game.players.forEach((player) => {
+            if(player){
+                if(player?.level){
+                    const lvlRounded = Math.min(150, Math.ceil(player.level / 10) * 10);
+                    if(result.level[lvlRounded]){
+                        result.level[lvlRounded]++
+                    } else{
+                        result.level[lvlRounded] = 1;
+                    }
+                }
+            }
+        })
+    });
+    return result;
+}
+
 const getPercentage = (number1, number2, decimals = 1) => {
     if (number2 === 0) return 0;
     const raw = (number1 / number2) * 100;
@@ -213,7 +253,7 @@ const parseTotals = (games) => {
                             const armorName = player[category];
                             const dataItem = data[category][armorName];
                             incrementItem(dataItem, difficulty, missionLen);
-                            if (player.level) {
+                            if (player.level) { 
                                 incrementLevel(dataItem, player.level)
                             }
 
@@ -276,6 +316,7 @@ const incrementItem = (dataItem, difficulty, mission, key = 'loadouts') => {
     dataItem.diffs[difficulty] && dataItem.diffs[difficulty][key]++;
     dataItem.missions[mission] && dataItem.missions[mission][key]++;
 }
+
 const sortByLoadouts = (data, key) => {
     const items = data[key];
     const sorted = Object.entries(items)
@@ -410,5 +451,6 @@ module.exports = {
     buildFilter,
     buildGamesFilter,
     getMissionsByLength,
-    getItemDetails
+    getItemDetails,
+    getDistributions
 };
