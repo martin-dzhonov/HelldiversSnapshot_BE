@@ -4,48 +4,127 @@ const {
     strategemsDict,
     weaponsDict,
     itemsDict,
-    categories, 
-    getHistoryDict, 
+    categories,
+    getHistoryDict,
     getTotalsDict
 } = require('./constants');
 
 
-const getDistributions = (data)=>{
+function getDateShort(isoString) {
+    const date = new Date(isoString);
+    return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`
+}
+
+function groupByWeekRange(data) {
+    const grouped = {};
+  
+    for (const dateStr in data) {
+      const [day, month] = dateStr.split("/").map(Number);
+      const date = new Date(2025, month - 1, day);
+  
+      const dayOfWeek = date.getDay() || 7;
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - dayOfWeek + 1);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+  
+      const formatDate = d => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+      const weekKey = `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
+  
+      if (!grouped[weekKey]) grouped[weekKey] = 0;
+      grouped[weekKey] += data[dateStr];
+    }
+  
+    return Object.fromEntries(
+      Object.entries(grouped)
+        .sort(([a], [b]) => {
+          const [aStart] = a.split("-");
+          const [bStart] = b.split("-");
+          const [ad, am] = aStart.split("/").map(Number);
+          const [bd, bm] = bStart.split("/").map(Number);
+          return new Date(2025, am - 1, ad) - new Date(2025, bm - 1, bd);
+        })
+    );
+  }
+
+  function formatRanges(data) {
+    const result = {};
+    const keys = Object.keys(data).map(Number).sort((a, b) => a - b);
+    let previous = 0;
+    for (let key of keys) {
+      result[`${previous}-${key}`] = data[key];
+      previous = key;
+    }
+    return result;
+  }
+
+const getDistributions = (data) => {
     const result = {
         level: {},
         difficulty: {},
-        mission: {}
+        mission: {},
+        planet: {},
+        dates: {}
     }
 
     data.forEach((game) => {
         let difficulty = game.difficulty > 6 ? game.difficulty : 7;
-        let missionLen = getMissionLength(game.mission)
+        let missionLen = getMissionLength(game.mission);
+        let mission = game.mission;
+        let planet = game.planet;
+        let dateShort = getDateShort(game.createdAt);
 
-        if(result.difficulty[difficulty]){
+        if (result.difficulty[difficulty]) {
             result.difficulty[difficulty]++
-        } else{
+        } else {
             result.difficulty[difficulty] = 1;
         }
 
-        if(result.mission[missionLen]){
-            result.mission[missionLen]++
-        } else{
-            result.mission[missionLen] = 1;
+        if (result.mission[mission] && mission !== null) {
+            result.mission[mission]++
+        } else {
+            result.mission[mission] = 1;
+        }
+
+        if (result.planet[planet] && planet !== null) {
+            result.planet[planet]++
+        } else {
+            result.planet[planet] = 1;
+        }
+
+        if (result.dates[dateShort]) {
+            result.dates[dateShort]++
+        } else {
+            result.dates[dateShort] = 1;
         }
 
         game.players.forEach((player) => {
-            if(player){
-                if(player?.level){
+            if (player) {
+                if (player?.level) {
                     const lvlRounded = Math.min(150, Math.ceil(player.level / 10) * 10);
-                    if(result.level[lvlRounded]){
+                    if (result.level[lvlRounded]) {
                         result.level[lvlRounded]++
-                    } else{
+                    } else {
                         result.level[lvlRounded] = 1;
                     }
                 }
             }
         })
     });
+
+    const planetsFiltered = Object.fromEntries(
+        Object.entries(result.planet).filter(([key, value]) => value > 15)
+    );
+
+    const missionsFiltered = Object.fromEntries(
+        Object.entries(result.mission).filter(([key, value]) => value > 15)
+    );
+
+    result.planet = planetsFiltered;
+    result.mission = missionsFiltered;
+    result.dates = groupByWeekRange(result.dates)
+    result.level = formatRanges(result.level)
+
     return result;
 }
 
@@ -253,7 +332,7 @@ const parseTotals = (games) => {
                             const armorName = player[category];
                             const dataItem = data[category][armorName];
                             incrementItem(dataItem, difficulty, missionLen);
-                            if (player.level) { 
+                            if (player.level) {
                                 incrementLevel(dataItem, player.level)
                             }
 
