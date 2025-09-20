@@ -58,6 +58,14 @@ function groupByWeekRange(data) {
     return result;
   }
 
+  function trimKeys(obj) {
+    const result = {}
+    for (const [key, value] of Object.entries(obj)) {
+      const newKey = key.length > 18 ? key.slice(0, 18) + '..' : key
+      result[newKey] = value
+    }
+    return result
+  }
 const getDistributions = (data) => {
     const result = {
         level: {},
@@ -121,7 +129,7 @@ const getDistributions = (data) => {
     );
 
     result.planet = planetsFiltered;
-    result.mission = missionsFiltered;
+    result.mission = trimKeys(missionsFiltered);
     result.dates = groupByWeekRange(result.dates)
     result.level = formatRanges(result.level)
 
