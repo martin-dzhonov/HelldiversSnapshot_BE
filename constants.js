@@ -14,7 +14,8 @@ const patchPeriods = [
     { id: 5, name: "Masters Of Ceremony", start: "05/15/2025", end: "06/12/2025" },
     { id: 6, name: "Force Of Law", start: "06/12/2025", end: "07/17/2025" },
     { id: 7, name: "Control Group", start: "07/17/2025", end: "09/03/2025" },
-    { id: 8, name: "Into the Unjust", start: "09/04/2025", end: "Present" },
+    { id: 8, name: "Into the Unjust", start: "09/04/2025", end: "10/23/2025" },
+    { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "Present" },
 ];
 
 const armorNames = [

@@ -134,6 +134,21 @@ app.get('/games', withTiming(async (req, res) => {
     return res.send({games: mongoData, distributions});
 }));
 
+app.get('/aaa', withTiming(async (req, res) => {
+    const mongoData = await GameModel.find({});
+
+    const required = ["eagle_500kg", "barrage_napalm"];
+
+    const filtered = mongoData.filter(obj =>
+        Array.isArray(obj.players) &&
+        obj.players.length === 3 &&
+        obj.players
+          .filter(p => p && Array.isArray(p.strategem))
+          .every(p => required.every(strat => p.strategem.includes(strat)))
+      );
+    return res.send({filtered});
+}));
+
 app.get('/generate_reports', async (req, res) => {
     const startTime = Date.now();
     const models = [StrategemModel, WeaponModel, ArmorModel];
