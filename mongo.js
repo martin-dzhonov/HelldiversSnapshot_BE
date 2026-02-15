@@ -18,6 +18,7 @@ const gameSchema = new mongoose.Schema({
         }
     ],
     modifiers: [],
+    subfactions: []
 });
 
 const totalsSchema = new mongoose.Schema({
