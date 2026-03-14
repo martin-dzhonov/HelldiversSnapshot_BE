@@ -1,7 +1,8 @@
-const factions = ["terminid", "automaton", "illuminate"];
-const categories = ['strategem', 'weapons', 'armor'];
+
 const strategemCategories = ["Eagle/Orbital", "Support", "Defensive"];
 const weaponCategories = ["Primary", "Secondary", "Throwable"];
+const categories = ['strategem', 'weapons', 'armor'];
+const factions = ["terminid", "automaton", "illuminate"];
 const missionList = ["All", "Long", "Short"];
 const difficultyList = [0, 7, 8, 9, 10];
 
@@ -18,6 +19,29 @@ const patchPeriods = [
     { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "12/30/2025" },
     { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "Present" },
 ];
+
+const modifierNames = {
+    terminid: [
+        "ALL",
+        "RUPTURE STRAIN",
+        "PREDATOR STRAIN",
+        "HIVE LORDS",
+        "NONE",
+    ],
+    automaton: [
+        "ALL",
+        "THE INCENERATION CORPS",
+        "THE JET BRIGADE",
+        "CYBORGS",
+        "HEAVY ARMOR SURGE",
+        "HULK SURGE",
+        "NONE",
+    ],
+    illuminate: [
+        "ALL",
+    ]
+
+};
 
 const armorNames = [
     'Servo-Assisted',
@@ -281,6 +305,28 @@ const weaponsDict = {
 
 const itemsDict = { ...strategemsDict, ...weaponsDict };
 
+const defaultDetailsItem = {
+    "terminid": {
+        "total": {
+            "loadouts": 0,
+            "games": 0
+        },
+    },
+    "automaton": {
+        "total": {
+            "loadouts": 0,
+            "games": 0
+        },
+    },
+    "illuminate": {
+        "total": {
+            "loadouts": 0,
+            "games": 0
+        },
+    },
+
+};
+
 const getHistoryDict = (itemNames) => {
     const result = {};
     const createEntries = (names) =>
@@ -543,4 +589,6 @@ module.exports = {
     weaponCategories,
     getHistoryDict,
     getTotalsDict,
+    modifierNames,
+    defaultDetailsItem
 };

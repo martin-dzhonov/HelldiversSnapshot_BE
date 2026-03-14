@@ -17,55 +17,61 @@ function getDateShort(isoString) {
 
 function groupByWeekRange(data) {
     const grouped = {};
-  
-    for (const dateStr in data) {
-      const [day, month] = dateStr.split("/").map(Number);
-      const date = new Date(2025, month - 1, day);
-  
-      const dayOfWeek = date.getDay() || 7;
-      const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - dayOfWeek + 1);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-  
-      const formatDate = d => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
-      const weekKey = `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
-  
-      if (!grouped[weekKey]) grouped[weekKey] = 0;
-      grouped[weekKey] += data[dateStr];
-    }
-  
-    return Object.fromEntries(
-      Object.entries(grouped)
-        .sort(([a], [b]) => {
-          const [aStart] = a.split("-");
-          const [bStart] = b.split("-");
-          const [ad, am] = aStart.split("/").map(Number);
-          const [bd, bm] = bStart.split("/").map(Number);
-          return new Date(2025, am - 1, ad) - new Date(2025, bm - 1, bd);
-        })
-    );
-  }
 
-  function formatRanges(data) {
+    for (const dateStr in data) {
+        const [day, month] = dateStr.split("/").map(Number);
+        const date = new Date(2025, month - 1, day);
+
+        const dayOfWeek = date.getDay() || 7;
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - dayOfWeek + 1);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        const formatDate = d => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+        const weekKey = `${formatDate(weekStart)}-${formatDate(weekEnd)}`;
+
+        if (!grouped[weekKey]) grouped[weekKey] = 0;
+        grouped[weekKey] += data[dateStr];
+    }
+
+    return Object.fromEntries(
+        Object.entries(grouped)
+            .sort(([a], [b]) => {
+                const [aStart] = a.split("-");
+                const [bStart] = b.split("-");
+                const [ad, am] = aStart.split("/").map(Number);
+                const [bd, bm] = bStart.split("/").map(Number);
+                return new Date(2025, am - 1, ad) - new Date(2025, bm - 1, bd);
+            })
+    );
+}
+
+function parseMMDDYYYY(dateStr) {
+    if (dateStr === "Present") return new Date();
+    const [month, day, year] = dateStr.split("/").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+function formatRanges(data) {
     const result = {};
     const keys = Object.keys(data).map(Number).sort((a, b) => a - b);
     let previous = 0;
     for (let key of keys) {
-      result[`${previous}-${key}`] = data[key];
-      previous = key;
+        result[`${previous}-${key}`] = data[key];
+        previous = key;
     }
     return result;
-  }
+}
 
-  function trimKeys(obj) {
+function trimKeys(obj) {
     const result = {}
     for (const [key, value] of Object.entries(obj)) {
-      const newKey = key.length > 18 ? key.slice(0, 18) + '..' : key
-      result[newKey] = value
+        const newKey = key.length > 18 ? key.slice(0, 18) + '..' : key
+        result[newKey] = value
     }
     return result
-  }
+}
 const getDistributions = (data) => {
     const result = {
         level: {},
@@ -158,19 +164,6 @@ function buildFilter(patchPeriod, difficulty, mission) {
 }
 
 
-function buildGamesFilter(faction, patchPeriod, difficulty, mission) {
-    const validMissions = getMissionsByLength(mission);
-
-    return {
-        faction: faction,
-        ...((difficulty && difficulty !== "0") && { difficulty: Number(difficulty) }),
-        ...((mission && mission !== "All") && { 'mission': { $in: validMissions } }),
-        createdAt: {
-            $gte: new Date(patchPeriod.start),
-            $lte: patchPeriod.end.toLowerCase() === 'present' ? new Date() : new Date(patchPeriod.end)
-        }
-    };
-}
 
 function mergeItemData(itemPatchData, itemHistory, ranks) {
     const result = {};
@@ -274,13 +267,6 @@ function parseMissionValues(itemData, patchData) {
     })
 }
 
-function computeFactionTotals(mongoData) {
-    const dataSegmented = factions.map(f => mongoData.filter(game => game.faction === f));
-    return factions.reduce((acc, f, i) => {
-        acc[f] = parseTotals(dataSegmented[i]);
-        return acc;
-    }, {});
-}
 
 function saveCategoryData(model, totals, patch, difficulty, mission, category) {
     const doc = totalsByCategory({
@@ -317,76 +303,167 @@ function totalsByCategory(totals, category) {
 
     return result;
 }
+function computeFactionTotals2(mongoData) {
+    const factionsShort = ['terminid'];
+    const dataSegmented = factionsShort.map(f => mongoData.filter(game => game.faction === f));
+    return factionsShort.reduce((acc, f, i) => {
+        acc[f] = parseTotals2(dataSegmented[i]);
+        return acc;
+    }, {});
+}
 
-const parseTotals = (games) => {
-    let data = getTotalsDict();
+function parseTotals2(games, category, newItemsSet) {
+    const totals = { games: 0, loadouts: 0 };
+    const items = {};
 
-    games.forEach((game) => {
-        let difficulty = game.difficulty > 6 ? game.difficulty : 7;
-        let missionLen = getMissionLength(game.mission)
+    games.forEach(game => {
+        let countGame = false;
+        const gameItemSet = new Set();
 
-        categories.forEach((category) => {
-            let countGame = false;
-            game.players.forEach((player) => {
-                if (player) {
-                    if (player[category] !== null && player[category] !== undefined) {
-                        countGame = true;
+        game.players.forEach(player => {
+            if (!player) return;
 
-                        data.total[category].loadouts++;
-                        data.total[category].diffs[difficulty].loadouts++;
-                        data.total[category].missions[missionLen].loadouts++;
+            const valid = category === 'armor'
+                ? player.armor != null
+                : Array.isArray(player[category]) && player[category].length > 0 && player[category].every(i => i != null);
 
-                        if (category === 'armor') {
-                            const armorName = player[category];
-                            const dataItem = data[category][armorName];
-                            incrementItem(dataItem, difficulty, missionLen);
-                            if (player.level) {
-                                incrementLevel(dataItem, player.level)
-                            }
+            if (!valid) return;
 
-                        } else if (player[category]?.length > 0) {
-                            player[category].forEach((item) => {
-                                if (item !== null) {
-                                    const dataItem = data[category][item];
-                                    incrementItem(dataItem, difficulty, missionLen);
-                                    incrementCompanions(dataItem, player, item);
-                                    if (player.level) {
-                                        incrementLevel(dataItem, player.level)
-                                    }
-                                }
-                            })
-                        }
-                    }
+            const itemsArray = category === 'armor' ? [player.armor] : player[category];
+            const validItems = Array.isArray(itemsArray) ? itemsArray.filter(i => i != null) : itemsArray.filter(i => i);
+            if (validItems.length === 0) return;
+
+            countGame = true;
+            totals.loadouts++;
+
+            validItems.forEach(item => {
+                if (!items[item]) {
+                    items[item] = {
+                        loadouts: 0,
+                        games: 0,
+                        levelSum: 0,
+                        levelCount: 0,
+                        levels: {},
+                        isFirstPatch: newItemsSet.has(item)
+                    };
                 }
-            })
 
+                items[item].loadouts++;
+
+                const lvl = Number(player.level);
+                if (!isNaN(lvl) && lvl > 0) {
+                    items[item].levelSum += lvl;
+                    items[item].levelCount++;
+                    const lvlRounded = Math.min(150, Math.ceil(lvl / 50) * 50);
+                    items[item].levels[lvlRounded] = (items[item].levels[lvlRounded] || 0) + 1;
+                }
+
+                gameItemSet.add(item);
+            });
+        });
+
+        gameItemSet.forEach(item => {
+            items[item].games++;
+        });
+
+        if (countGame) totals.games++;
+    });
+
+    Object.values(items).forEach(itemData => {
+        itemData.lvl_avg = itemData.levelCount > 0
+            ? Math.round(itemData.levelSum / itemData.levelCount)
+            : null;
+    });
+
+    return { totals, items };
+}
+
+function computeFactionTotals(mongoData) {
+
+    const dataSegmented = factions.map(f => mongoData.filter(game => game.faction === f));
+    return factions.reduce((acc, f, i) => {
+        acc[f] = parseTotals(dataSegmented[i]);
+        return acc;
+    }, {});
+}
+const hasValidArrayLoadout = (arr) =>
+    Array.isArray(arr) && arr.length > 0 && arr.every(i => i != null)
+
+const incrementItem = (dataItem, difficulty, mission, key = 'loadouts') => {
+    dataItem.total[key]++;
+    dataItem.diffs[difficulty] && dataItem.diffs[difficulty][key]++;
+    dataItem.missions[mission] && dataItem.missions[mission][key]++;
+}
+
+function parseTotals(games) {
+    const data = getTotalsDict();
+
+    games.forEach(game => {
+        const difficulty = game.difficulty > 6 ? game.difficulty : 7;
+        const missionLen = getMissionLength(game.mission);
+
+        categories.forEach(category => {
+            let countGame = false; // track if this game counts for this category
+
+            game.players.forEach(player => {
+                if (!player) return;
+
+                const valid = category === 'armor'
+                    ? player.armor != null
+                    : Array.isArray(player[category]) && player[category].length > 0 && player[category].every(i => i != null);
+
+                if (!valid) return;
+
+                countGame = true;
+
+                // increment total valid players (denominator for percentages)
+                data.total[category].loadouts++;
+                data.total[category].diffs[difficulty].loadouts++;
+                data.total[category].missions[missionLen].loadouts++;
+
+                if (category === 'armor') {
+                    const dataItem = data[category][player.armor];
+                    incrementItem(dataItem, difficulty, missionLen);
+                    if (player.level) incrementLevel(dataItem, player.level);
+                } else {
+                    player[category].forEach(item => {
+                        const dataItem = data[category][item];
+                        incrementItem(dataItem, difficulty, missionLen);
+                        incrementCompanions(dataItem, player, item);
+                        if (player.level) incrementLevel(dataItem, player.level);
+                    });
+                }
+            });
+
+            // count unique games where at least one valid player had a valid item
             if (countGame) {
                 data.total[category].games++;
                 data.total[category].diffs[difficulty].games++;
                 data.total[category].missions[missionLen].games++;
 
-                let allItems = game.players.map((player) => {
-                    if (player) { return player[category] }
-                }).flat();
+                // now track per-item games (unique game counts)
+                const allItems = game.players
+                    .filter(p => p)
+                    .map(p => (category === 'armor' ? [p.armor] : p[category]))
+                    .flat()
+                    .filter(item => item != null);
 
-                const itemsFiltered = allItems.filter((item) => item !== null && item !== undefined);
-                const uniqueItems = [...new Set(itemsFiltered)];
-                uniqueItems.forEach((item) => {
+                const uniqueItems = [...new Set(allItems)];
+                uniqueItems.forEach(item => {
                     const dataItem = data[category][item];
                     incrementItem(dataItem, difficulty, missionLen, 'games');
-                })
+                });
             }
-        })
-    })
+        });
+    });
 
-    categories.forEach((key) => {
+    categories.forEach(key => {
         sortByLoadouts(data, key);
         generateValues(data, key);
-    })
+    });
 
     return data;
 }
-
 const getMissionsByLength = (type) => {
     return type === "All"
         ? missionNames[0].concat(missionNames[1])
@@ -398,11 +475,6 @@ const getMissionLength = (missionName) => {
     return longMissions.includes(missionName) ? "long" : "short";
 };
 
-const incrementItem = (dataItem, difficulty, mission, key = 'loadouts') => {
-    dataItem.total[key]++;
-    dataItem.diffs[difficulty] && dataItem.diffs[difficulty][key]++;
-    dataItem.missions[mission] && dataItem.missions[mission][key]++;
-}
 
 const sortByLoadouts = (data, key) => {
     const items = data[key];
@@ -492,6 +564,16 @@ const getItemsByCategory = (data, category) => {
     return filtered;
 }
 
+const getItemsRanks = (dict, categories) => {
+    const ranks = { all: Object.keys(dict).length };
+
+    for (const category of categories) {
+        ranks[category] = Object.keys(getItemsByCategory(dict, category)).length;
+    }
+
+    return ranks;
+}
+
 async function getItemDetails({ id, patch_id, model, dict, categories }) {
     const patchesData = await model.find({
         'filter.difficulty': 0,
@@ -536,8 +618,11 @@ module.exports = {
     saveCategoryData,
     computeFactionTotals,
     buildFilter,
-    buildGamesFilter,
     getMissionsByLength,
     getItemDetails,
-    getDistributions
+    getDistributions,
+    parseMMDDYYYY,
+    computeFactionTotals2,
+    parseTotals2,
+    getItemsRanks
 };
