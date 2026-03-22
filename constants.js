@@ -17,7 +17,8 @@ const patchPeriods = [
     { id: 7, name: "Control Group", start: "07/17/2025", end: "09/03/2025" },
     { id: 8, name: "Into the Unjust", start: "09/04/2025", end: "10/23/2025" },
     { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "12/30/2025" },
-    { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "Present" },
+    { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "03/16/2026" },
+    { id: 11, name: "Entrenched Division", start: "03/17/2026", end: "Present" },
 ];
 
 const modifierNames = {
@@ -39,6 +40,8 @@ const modifierNames = {
     ],
     illuminate: [
         "ALL",
+        "MINDLESS MASSES",
+        "APPROPRIATORS"
     ]
 
 };
@@ -67,7 +70,10 @@ const armorNames = [
     'Desert Stormer',
     'Rock Solid',
     'Reduced Signature',
-    'Supplementary Adrenaline'
+    'Supplementary Adrenaline',
+    'Concussive Padding, Grenadier',
+    'Concussive Padding, Hazmat',
+    'Concussive Padding, Reinforced'
 ];
 
 const missionNames = [
@@ -104,7 +110,12 @@ const missionNames = [
         "CONDUCT MOBILE E-711 EXTRACTION",
         "RESTART PUMPS",
         "NEUTRALIZE GROUND-TO-ORBIT DEFENSES",
-        "HALT CYBORG PRODUCTION"
+        "HALT CYBORG PRODUCTION",
+        "COMMANDO: AQUIRE EVIDENCE",
+        "COMMANDO: EXTRACT INTEL",
+        "COMMANDO: SECURE BLACK BOX",
+        "CONFISCATE ASSETS",
+        "DESTROY EXOSPIRE"
     ],
     [
         "ERADICATE TERMINID SWARM",
@@ -115,6 +126,7 @@ const missionNames = [
         "DEFEND EVACUATION SITE",
         "RETRIEVE ESSENTIAL PERSONNEL",
         "BLITZ: SECURE RESEARCH SITE",
+        "BLITZ: DESTROY BIO-PROCESSORS",
         "REPEL INVASION FLEET"
     ],
 ];
@@ -201,7 +213,6 @@ const strategemsDict = {
     sup_speargun: createItem("Speargun", "One True Flag", "Support"),
     sup_eat_700: createItem("Expendable Napalm", "One True Flag", "Support"),
     sup_solo_silo: createItem("Solo Silo", "One True Flag", "Support"),
-
     guard_hot: createItem("Hot Dog", "AX/FLAM-75 Hot Dog", "Support"),
     sup_defoliation_tool: createItem("Defoliation Tool", "CQC-9 Defoliation Tool", "Support"),
     sup_maxigun: createItem("Maxigun", "M-1000 Maxigun", "Support"),
@@ -210,6 +221,8 @@ const strategemsDict = {
     sup_leveller: createItem("Leveller", "EAT-411 Leveller", "Support"),
     sup_belt_fed_gl: createItem("Belt-fed GL", "GL-28 Belt-fed GL", "Support"),
     bastion: createItem("Bastion", "TD-220 Bastion", "Support"),
+    sup_cremator: createItem("Cremator", "B/FLAM-80 Cremator", "Support"),
+    sentry_gas: createItem("Gas Mortar", "A/GM-17 Gas Mortar Sentry", "Defensive"),
 };
 
 const weaponsDict = {
@@ -260,6 +273,8 @@ const weaponsDict = {
     censor: createItem("Censor", "R-72 Censor", "Primary", 'webp'),
     suppressor: createItem("Suppressor", "AR-59 Suppressor", "Primary", 'webp'),
     trident: createItem("Trident", "LAS-13 Trident", "Primary", 'webp'),
+    stoker: createItem("Stoker", "SMG/FLAM-34 Stoker", "Primary", 'webp'),
+    sweeper: createItem("Sweeper", "SG-97 Sweeper", "Primary", 'webp'),
 
     peacemaker: createItem("Peacemaker", "P-2 Peacemaker", "Secondary", 'webp'),
     redeemer: createItem("Redeemer", "P-19 Redeemer", "Secondary", 'webp'),
@@ -281,6 +296,8 @@ const weaponsDict = {
     m6c: createItem("M6C", "M6C/SOCOM Pistol", "Secondary", 'webp'),
     machete: createItem("Machete", "CQC-42 Machete", "Secondary", 'webp'),
     re_educator: createItem("Re-Educator", "P-35 Re-Educator", "Secondary", 'webp'),
+    entrenchment_tool: createItem("Entrenchment Tool", "CQC-73 Entrenchment Tool", "Secondary", 'webp'),
+    veto: createItem("Veto", "P-69 Veto", "Secondary", 'webp'),
 
     grenade_frag: createItem("Frag", "G-6 Frag", "Throwable", 'webp'),
     grenade_he: createItem("High Explosive", "G-12 High Explosive", "Throwable", 'webp'),
@@ -301,6 +318,7 @@ const weaponsDict = {
     lure_mine: createItem("Lure Mine", "TM-1 Lure Mine", "Throwable", 'webp'),
     grenade_smokescreen: createItem("Smokescreen", "G-89 Smokescreen", "Throwable", 'webp'),
     grenade_shield: createItem("Shield", "G/SH-39 Shield", "Throwable", 'webp'),
+    giga_grenade: createItem("Giga Grenade", "G-48 Giga Grenade", "Throwable", 'webp'),
 };
 
 const itemsDict = { ...strategemsDict, ...weaponsDict };
