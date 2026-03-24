@@ -318,7 +318,7 @@ app.get('/clear-aggregates', async (req, res) => {
     });
 });
 
-app.post('/flush-cache', (req, res) => {
+app.get('/flush-cache', (req, res) => {
     itemsStatsCache.flushAll();
     strategemDetailsCache.flushAll();
     weaponDetailsCache.flushAll();
