@@ -318,6 +318,16 @@ app.get('/clear-aggregates', async (req, res) => {
     });
 });
 
+app.post('/flush-cache', (req, res) => {
+    itemsStatsCache.flushAll();
+    strategemDetailsCache.flushAll();
+    weaponDetailsCache.flushAll();
+    dataStatusCache.flushAll();
+    gamesCache.flushAll();
+  
+    res.json({ success: true, message: 'All caches cleared' });
+  });
+
 app.get('/', (req, res) => {
     res.send('Hello !');
 });

@@ -50,6 +50,7 @@ const itemsStatsHandler = async (req) => {
         patch: { $in: [patch, patch - 1] }
     }).lean();
 
+
     return buildItemsChartsStats(docs, patch);
 };
 
