@@ -26,6 +26,7 @@ const modifierNames = {
         "ALL",
         "RUPTURE STRAIN",
         "PREDATOR STRAIN",
+        "DRAGONROACHES",
         "HIVE LORDS",
         "NONE",
     ],
