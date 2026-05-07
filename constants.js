@@ -18,7 +18,8 @@ const patchPeriods = [
     { id: 8, name: "Into the Unjust", start: "09/04/2025", end: "10/23/2025" },
     { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "12/30/2025" },
     { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "03/16/2026" },
-    { id: 11, name: "Entrenched Division", start: "03/17/2026", end: "Present" },
+    { id: 11, name: "Entrenched Division", start: "03/17/2026", end: "04/27/2026" },
+    { id: 12, name: "Exo Experts", start: "04/27/2026", end: "Present" },
 ];
 
 const modifierNames = {
@@ -26,6 +27,7 @@ const modifierNames = {
         "ALL",
         "RUPTURE STRAIN",
         "PREDATOR STRAIN",
+        "SPORE BURST STRAIN",
         "DRAGONROACHES",
         "HIVE LORDS",
         "NONE",
@@ -33,7 +35,7 @@ const modifierNames = {
     automaton: [
         "ALL",
         "THE INCENERATION CORPS",
-        "THE JET BRIGADE",
+        "JET BRIGADE FACTORIES",
         "CYBORGS",
         "HEAVY ARMOR SURGE",
         "HULK SURGE",
@@ -116,7 +118,11 @@ const missionNames = [
         "COMMANDO: EXTRACT INTEL",
         "COMMANDO: SECURE BLACK BOX",
         "CONFISCATE ASSETS",
-        "DESTROY EXOSPIRE"
+        "DESTROY EXOSPIRE",
+        "SABOTAGE ORGO-PLASMA SYNTHESIS",
+        "ANNEX UNTAPPED MINERAL SITES",
+        "SEIZE INDUSTRIAL COMPLEX",
+        "RAPID AQUISITION"
     ],
     [
         "ERADICATE TERMINID SWARM",
@@ -224,6 +230,9 @@ const strategemsDict = {
     bastion: createItem("Bastion", "TD-220 Bastion", "Support"),
     sup_cremator: createItem("Cremator", "B/FLAM-80 Cremator", "Support"),
     sentry_gas: createItem("Gas Mortar", "A/GM-17 Gas Mortar Sentry", "Defensive"),
+    sup_bullet_storm: createItem("Bullet Storm", "MGX-42 Bullet Storm", "Support"),
+    exo_lumberer: createItem("Lumberer", "EXO-51 Lumberer Exosuit", "Support"),
+    exo_breakthrough: createItem("Breakthrough", "EXO-55 Breakthrough Exosuit", "Support"),
 };
 
 const weaponsDict = {
@@ -276,6 +285,7 @@ const weaponsDict = {
     trident: createItem("Trident", "LAS-13 Trident", "Primary", 'webp'),
     stoker: createItem("Stoker", "SMG/FLAM-34 Stoker", "Primary", 'webp'),
     sweeper: createItem("Sweeper", "SG-97 Sweeper", "Primary", 'webp'),
+    gallant: createItem("Gallant", "SMG-203 Gallant", "Primary", 'webp'),
 
     peacemaker: createItem("Peacemaker", "P-2 Peacemaker", "Secondary", 'webp'),
     redeemer: createItem("Redeemer", "P-19 Redeemer", "Secondary", 'webp'),
@@ -299,6 +309,7 @@ const weaponsDict = {
     re_educator: createItem("Re-Educator", "P-35 Re-Educator", "Secondary", 'webp'),
     entrenchment_tool: createItem("Entrenchment Tool", "CQC-73 Entrenchment Tool", "Secondary", 'webp'),
     veto: createItem("Veto", "P-69 Veto", "Secondary", 'webp'),
+    missile_pistol: createItem("Missile Pistol", "P-33 Missile Pistol", "Secondary", 'webp'),
 
     grenade_frag: createItem("Frag", "G-6 Frag", "Throwable", 'webp'),
     grenade_he: createItem("High Explosive", "G-12 High Explosive", "Throwable", 'webp'),
