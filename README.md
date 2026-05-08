@@ -57,15 +57,6 @@ Values:
 ```
 
 ```sh
-type
-
-Values:
-'strategem'
-'weapons'
-'armor'
-```
-
-```sh
 modifier
 
 Values:
