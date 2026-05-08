@@ -25,7 +25,7 @@ Values:
 ```
 
 ```sh
-patch
+patch_id
 
 Values: 0 - 12
 12 - Latest patch
