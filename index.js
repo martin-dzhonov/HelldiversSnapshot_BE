@@ -128,6 +128,12 @@ app.get(
     )
 );
 
+app.get('/weapon_types', withTiming(async (req, res) => {
+    return res.send({
+        items: weaponsDict
+    });
+}));
+
 
 app.get('/games', withTiming(async (req, res) => {
     const { faction, patch, difficulty, mission, modifier } = req.query;

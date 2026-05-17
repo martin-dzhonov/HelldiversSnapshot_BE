@@ -231,8 +231,8 @@ const strategemsDict = {
     sup_cremator: createItem("Cremator", "B/FLAM-80 Cremator", "Support"),
     sentry_gas: createItem("Gas Mortar", "A/GM-17 Gas Mortar Sentry", "Defensive"),
     sup_bullet_storm: createItem("Bullet Storm", "MGX-42 Bullet Storm", "Support"),
-    exo_lumberer: createItem("Lumberer", "EXO-51 Lumberer Exosuit", "Support"),
-    exo_breakthrough: createItem("Breakthrough", "EXO-55 Breakthrough Exosuit", "Support"),
+    exo_lumberer: createItem("Lumberer Exosuit", "EXO-51 Lumberer Exosuit", "Support"),
+    exo_breakthrough: createItem("Breakthrough Exosuit", "EXO-55 Breakthrough Exosuit", "Support"),
 };
 
 const weaponsDict = {
