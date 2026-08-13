@@ -19,8 +19,8 @@ const patchPeriods = [
     { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "12/30/2025" },
     { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "03/16/2026" },
     { id: 11, name: "Entrenched Division", start: "03/17/2026", end: "04/27/2026" },
-    { id: 12, name: "Exo Experts", start: "04/27/2026", end: "08/12/2026" },
-    { id: 13, name: "Devoid of Liberty", start: "08/13/2026", end: "Present" },
+    { id: 12, name: "Exo Experts", start: "04/27/2026", end: "08/11/2026" },
+    { id: 13, name: "Devoid of Liberty", start: "08/12/2026", end: "Present" },
 ];
 
 const modifierNames = {
