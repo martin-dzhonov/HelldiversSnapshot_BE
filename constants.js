@@ -19,7 +19,8 @@ const patchPeriods = [
     { id: 9, name: "Into the Unjust 4.1", start: "10/23/2025", end: "12/30/2025" },
     { id: 10, name: "Machinery Of Oppression", start: "02/10/2026", end: "03/16/2026" },
     { id: 11, name: "Entrenched Division", start: "03/17/2026", end: "04/27/2026" },
-    { id: 12, name: "Exo Experts", start: "04/27/2026", end: "Present" },
+    { id: 12, name: "Exo Experts", start: "04/27/2026", end: "08/12/2026" },
+    { id: 13, name: "Devoid of Liberty", start: "08/13/2026", end: "Present" },
 ];
 
 const modifierNames = {
@@ -44,7 +45,8 @@ const modifierNames = {
     illuminate: [
         "ALL",
         "MINDLESS MASSES",
-        "APPROPRIATORS"
+        "APPROPRIATORS",
+        "VOTE SNATCHERS"
     ]
 
 };
@@ -76,7 +78,8 @@ const armorNames = [
     'Supplementary Adrenaline',
     'Concussive Padding, Grenadier',
     'Concussive Padding, Hazmat',
-    'Concussive Padding, Reinforced'
+    'Concussive Padding, Reinforced',
+    'True Grit'
 ];
 
 const missionNames = [
@@ -233,6 +236,8 @@ const strategemsDict = {
     sup_bullet_storm: createItem("Bullet Storm", "MGX-42 Bullet Storm", "Support"),
     exo_lumberer: createItem("Lumberer Exosuit", "EXO-51 Lumberer Exosuit", "Support"),
     exo_breakthrough: createItem("Breakthrough Exosuit", "EXO-55 Breakthrough Exosuit", "Support"),
+    sup_melta: createItem("Meltagun", "40-K Meltagun", "Support"),
+    frv_supply: createItem("Supply FRV", "M-103 Supply FRV", "Support"),
 };
 
 const weaponsDict = {
@@ -286,6 +291,7 @@ const weaponsDict = {
     stoker: createItem("Stoker", "SMG/FLAM-34 Stoker", "Primary", 'webp'),
     sweeper: createItem("Sweeper", "SG-97 Sweeper", "Primary", 'webp'),
     gallant: createItem("Gallant", "SMG-203 Gallant", "Primary", 'webp'),
+    hot_shot: createItem("Hot Shot", "40-K Hot-Shot", "Primary", 'webp'),
 
     peacemaker: createItem("Peacemaker", "P-2 Peacemaker", "Secondary", 'webp'),
     redeemer: createItem("Redeemer", "P-19 Redeemer", "Secondary", 'webp'),
@@ -310,6 +316,7 @@ const weaponsDict = {
     entrenchment_tool: createItem("Entrenchment Tool", "CQC-73 Entrenchment Tool", "Secondary", 'webp'),
     veto: createItem("Veto", "P-69 Veto", "Secondary", 'webp'),
     missile_pistol: createItem("Missile Pistol", "P-33 Missile Pistol", "Secondary", 'webp'),
+    bolt_pistol: createItem("Bolt Pistol", "40-K Bolt_Pistol", "Secondary", 'webp'),
 
     grenade_frag: createItem("Frag", "G-6 Frag", "Throwable", 'webp'),
     grenade_he: createItem("High Explosive", "G-12 High Explosive", "Throwable", 'webp'),
@@ -331,6 +338,8 @@ const weaponsDict = {
     grenade_smokescreen: createItem("Smokescreen", "G-89 Smokescreen", "Throwable", 'webp'),
     grenade_shield: createItem("Shield", "G/SH-39 Shield", "Throwable", 'webp'),
     giga_grenade: createItem("Giga Grenade", "G-48 Giga Grenade", "Throwable", 'webp'),
+    melta_mine: createItem("Melta Mine", "G/40-K Melta Mine", "Throwable", 'webp'),
+
 };
 
 const itemsDict = { ...strategemsDict, ...weaponsDict };
