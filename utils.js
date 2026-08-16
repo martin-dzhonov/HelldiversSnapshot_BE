@@ -115,7 +115,7 @@ const getDistributions = (data) => {
         game.players.forEach((player) => {
             if (player) {
                 if (player?.level) {
-                    const lvlRounded = Math.min(150, Math.ceil(player.level / 10) * 10);
+                    const lvlRounded = Math.min(300, Math.ceil(player.level / 30) * 30);
                     if (result.level[lvlRounded]) {
                         result.level[lvlRounded]++
                     } else {
@@ -354,7 +354,7 @@ function parseTotals2(games, category, newItemsSet) {
                 if (!isNaN(lvl) && lvl > 0) {
                     items[item].levelSum += lvl;
                     items[item].levelCount++;
-                    const lvlRounded = Math.min(150, Math.ceil(lvl / 50) * 50);
+                    const lvlRounded = Math.min(300, Math.ceil(lvl / 100) * 100);
                     items[item].levels[lvlRounded] = (items[item].levels[lvlRounded] || 0) + 1;
                 }
 
@@ -486,7 +486,7 @@ const sortByLoadouts = (data, key) => {
 const incrementLevel = (dataItem, level) => {
     dataItem.totallvl.count++;
     dataItem.totallvl.acc = Number(dataItem.totallvl.acc) + Number(level);
-    const lvlRounded = Math.min(150, Math.ceil(level / 50) * 50);
+    const lvlRounded = Math.min(300, Math.ceil(level / 100) * 100);
     if (dataItem.levels[lvlRounded]) {
         dataItem.levels[lvlRounded]++;
     } else {
